@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Fire Base Marginal Value and Robustness
 
-Plan: map accessibility-based station value, compare leave-one-out and sampled
-Shapley values, and show ranking stability across normal and disrupted roads.
+Plan: map accessibility-based station value and compare station rankings across
+normal roads, disrupted roads, and the conservative robust-value summary.
 Framework: AnaSOP Sections 5, 6.5, and workflow step 6.
 """
 
@@ -15,8 +15,6 @@ import geopandas as gpd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
-from matplotlib.lines import Line2D
-from matplotlib.ticker import PercentFormatter
 import numpy as np
 import pandas as pd
 from pyproj import Transformer
@@ -181,17 +179,12 @@ def population_station_frame(values: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def make_figure(values: gpd.GeoDataFrame) -> None:
-    """Render the planned map, benchmark scatter, and ranked dot plot."""
+    """Render the planned station-value map and ranked comparison."""
     administrative = gpd.read_parquet(ADMIN_PATH).to_crs(PROJECTED_CRS)
     boundary = administrative.dissolve()
     bounds = tuple(boundary.total_bounds)
     geographic_bounds = tuple(boundary.to_crs(GEOGRAPHIC_CRS).total_bounds)
     stations = population_station_frame(values).to_crs(PROJECTED_CRS)
-    central = values.loc[
-        values["Exposure Objective"].eq(MAIN_OBJECTIVE)
-        & values["Road Scenario"].eq("central")
-    ].copy()
-
     sns.set_theme(context="paper", style="whitegrid", font="Hiragino Sans")
     mpl.rcParams.update(
         {
@@ -204,19 +197,16 @@ def make_figure(values: gpd.GeoDataFrame) -> None:
         }
     )
 
-    fig = plt.figure(figsize=(13.4, 11.7), constrained_layout=True)
+    fig = plt.figure(figsize=(16.0, 6.6), constrained_layout=True)
     grid = fig.add_gridspec(
+        1,
         2,
-        2,
-        height_ratios=(1, 0.82),
-        width_ratios=(1, 1),
-        wspace=0.09,
-        hspace=0.16,
+        width_ratios=(1.15, 1.30),
+        wspace=0.10,
     )
     map_ax = fig.add_subplot(grid[0, 0])
-    scatter_ax = fig.add_subplot(grid[0, 1])
-    rank_ax = fig.add_subplot(grid[1, :])
-    axes = (map_ax, scatter_ax, rank_ax)
+    rank_ax = fig.add_subplot(grid[0, 1])
+    axes = (map_ax, rank_ax)
 
     boundary.plot(ax=map_ax, color="#f0f2f3", edgecolor="none", zorder=0)
     administrative.boundary.plot(
@@ -244,6 +234,7 @@ def make_figure(values: gpd.GeoDataFrame) -> None:
     )
     style_map(map_ax, bounds, geographic_bounds)
     map_ax.set_box_aspect(1)
+    map_ax.set_anchor("N")
     colorbar_ax = map_ax.inset_axes([0.10, -0.115, 0.80, 0.025])
     map_colorbar = fig.colorbar(
         map_points,
@@ -257,54 +248,6 @@ def make_figure(values: gpd.GeoDataFrame) -> None:
         fontsize=8,
         color="#425461",
     )
-
-    type_colors = {
-        "Fire Station": "#276d93",
-        "Branch or Outpost": "#d27a35",
-    }
-    for base_type, group in central.groupby("Fire Base Type", sort=False):
-        scatter_ax.scatter(
-            100 * group["Leave-One-Out Value Share"],
-            100 * group["Scenario Shapley Value Share"],
-            s=34,
-            color=type_colors.get(base_type, "#68757d"),
-            edgecolor="white",
-            linewidth=0.45,
-            alpha=0.88,
-            label=base_type,
-            zorder=3,
-        )
-    limit = 1.08 * max(
-        float((100 * central["Leave-One-Out Value Share"]).max()),
-        float((100 * central["Scenario Shapley Value Share"]).max()),
-    )
-    scatter_ax.plot([0, limit], [0, limit], color="#9aa3a8", linewidth=0.8, zorder=1)
-    correlation = central["Leave-One-Out Value Share"].rank().corr(
-        central["Scenario Shapley Value Share"].rank()
-    )
-    scatter_ax.text(
-        0.97,
-        0.05,
-        f"Rank correlation = {correlation:.2f}",
-        transform=scatter_ax.transAxes,
-        ha="right",
-        va="bottom",
-        fontsize=8,
-        color="#46545e",
-    )
-    scatter_ax.set_xlim(0, limit)
-    scatter_ax.set_ylim(0, limit)
-    scatter_ax.set_aspect("equal", adjustable="box")
-    scatter_ax.set_xlabel("Share of total leave-one-out value (%)", fontsize=9)
-    scatter_ax.set_ylabel("Share of coalition value (%)", fontsize=9)
-    scatter_ax.tick_params(labelsize=8)
-    scatter_ax.legend(
-        loc="upper left",
-        frameon=False,
-        fontsize=7.5,
-        handletextpad=0.35,
-    )
-    sns.despine(ax=scatter_ax)
 
     population = values.loc[values["Exposure Objective"].eq(MAIN_OBJECTIVE)].copy()
     shares = population.pivot(
@@ -378,7 +321,29 @@ def make_figure(values: gpd.GeoDataFrame) -> None:
     )
     sns.despine(ax=rank_ax, left=True)
 
-    for label, ax in zip("abc", axes, strict=True):
+    # Resolve the responsive layout first, then make the two panel y-axes
+    # exactly equal in physical length. The map remains square, so matching
+    # heights also enlarges its geographic frame without distorting it.
+    fig.canvas.draw()
+    map_position = map_ax.get_position()
+    rank_position = rank_ax.get_position()
+    target_map_width = (
+        rank_position.height * fig.get_figheight() / fig.get_figwidth()
+    )
+    available_map_width = rank_position.x0 - map_position.x0
+    if target_map_width >= available_map_width:
+        raise ValueError("Figure layout does not leave enough width to align panel axes")
+    fig.set_layout_engine("none")
+    map_ax.set_position(
+        [
+            map_position.x0,
+            rank_position.y0,
+            target_map_width,
+            rank_position.height,
+        ]
+    )
+
+    for label, ax in zip("ab", axes, strict=True):
         draw_panel_label(ax, label)
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

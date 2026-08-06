@@ -14,13 +14,13 @@ from fire_service_access_common import (
     BACKUP_THRESHOLD_MIN,
     DEMAND_PATH,
     DISPATCH_PATH,
-    EDGE_PATH,
     UNMET_SERVICE_CAP_MIN,
     accepted_connectors,
     build_augmented_graph,
     build_station_od,
     scenario_availability,
 )
+from fire_service_reliability_common import build_compact_fire_network
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,6 +32,8 @@ ADMIN_PATH = PROCESSED / "administrative_areas_preprocessed.parquet"
 ACTION_PATH = RESULTS / "derived/intervention_actions.parquet"
 PERFORMANCE_PATH = RESULTS / "derived/intervention_performance.parquet"
 CONTEXT_PATH = RESULTS / "derived/intervention_context_125m.parquet"
+SECTION_EDGE_PATH = PROCESSED / "routable_road_edges_sectioned_preprocessed.parquet"
+SECTION_INTERVENTION_PATH = PROCESSED / "road_section_intervention_preprocessed.parquet"
 
 PROJECTED_CRS = 6670
 MAX_BUDGET = 5
@@ -40,7 +42,11 @@ PREPOSITION_SPACING_M = 2_000.0
 WATER_CANDIDATES = 25
 WATER_SPACING_M = 1_200.0
 WATER_SUPPORT_RADIUS_M = 1_000.0
-ROAD_SCREEN_CANDIDATES = 10
+ROAD_BRIDGE_CANDIDATES = 14
+ROAD_PROXIMITY_CANDIDATES = 14
+ROAD_SCREEN_CANDIDATES = 24
+ROAD_PROXIMITY_DISTANCE_M = 5_000.0
+ROAD_PRIORITY_CELL_COUNT = 250
 MINAMI_WARD_CODE = "43104"
 
 
@@ -49,7 +55,8 @@ def cache_is_current() -> bool:
     sources = [
         CONSEQUENCE_PATH,
         ADMIN_PATH,
-        EDGE_PATH,
+        SECTION_EDGE_PATH,
+        SECTION_INTERVENTION_PATH,
         DEMAND_PATH,
         DISPATCH_PATH,
         RESULTS / "derived/network/fire_station_od_central.npz",
@@ -235,14 +242,15 @@ def network_metrics(
     return minimum_time, qualifying
 
 
-def road_bridge_candidates(
+def road_section_candidates(
     graph: nx.Graph,
-    removed_edges: gpd.GeoDataFrame,
+    sections: gpd.GeoDataFrame,
     demand_nodes: list[str],
     station_sources: list[str],
     objective_weight: np.ndarray,
+    cell_points: gpd.GeoSeries,
 ) -> gpd.GeoDataFrame:
-    """Screen removed edges that reconnect distinct central-network components."""
+    """Screen event-exposed road sections by bridging and consequence proximity."""
     component_of: dict[str, int] = {}
     for component_id, nodes in enumerate(nx.connected_components(graph)):
         for node in nodes:
@@ -263,25 +271,24 @@ def road_bridge_candidates(
         "Secondary Emergency Road": 2,
         "None": 1,
     }
-    candidates: list[dict[str, object]] = []
-    candidate_columns = [
-        "Road Edge ID",
-        "From Node ID",
-        "To Node ID",
-        "Baseline Edge Travel Time (min)",
+    eligible = sections.loc[
+        sections["Road Restoration Cost Proxy"].notna()
+        & sections["Network Analysis Eligible"].fillna(False)
+        & sections["Road Available"].fillna(False)
+    ].copy()
+    if eligible.empty:
+        raise ValueError("No event-exposed road sections are eligible for restoration")
+
+    bridging_rows: list[dict[str, object]] = []
+    bridge_columns = [
+        "Road Section ID",
+        "Section From Node ID",
+        "Section To Node ID",
         "Emergency Route Membership",
-        "Road Category",
-        "Geometry",
     ]
-    for (
-        edge_id,
-        from_node_value,
-        to_node_value,
-        edge_minutes,
-        membership_value,
-        road_category,
-        geometry,
-    ) in removed_edges[candidate_columns].itertuples(index=False, name=None):
+    for section_id, from_node_value, to_node_value, membership_value in eligible[
+        bridge_columns
+    ].itertuples(index=False, name=None):
         from_node = str(from_node_value)
         to_node = str(to_node_value)
         from_component = component_of.get(from_node)
@@ -300,35 +307,94 @@ def road_bridge_candidates(
         if potential <= 0:
             continue
         membership = str(membership_value)
-        candidates.append(
+        bridging_rows.append(
             {
-                "Road Edge ID": str(edge_id),
-                "Component Pair": tuple(sorted((from_component, to_component))),
+                "Road Section ID": str(section_id),
                 "Bridge Screening Score": potential,
                 "Emergency Priority": membership_priority.get(membership, 1),
-                "Baseline Edge Travel Time (min)": float(edge_minutes),
-                "Road Category": road_category,
-                "Emergency Route Membership": membership,
-                "Geometry": geometry,
             }
         )
-    if not candidates:
-        raise ValueError("No disrupted component-bridging road candidates were found")
-    candidate_frame = gpd.GeoDataFrame(candidates, geometry="Geometry", crs=removed_edges.crs)
-    candidate_frame = candidate_frame.sort_values(
-        [
-            "Component Pair",
-            "Emergency Priority",
-            "Baseline Edge Travel Time (min)",
-        ],
-        ascending=[True, False, True],
-        kind="stable",
-    ).drop_duplicates("Component Pair")
-    candidate_frame["Screen Rank Score"] = (
-        candidate_frame["Bridge Screening Score"]
-        * (1 + 0.15 * (candidate_frame["Emergency Priority"] - 1))
+    bridge = pd.DataFrame(bridging_rows)
+    if bridge.empty:
+        bridge_ids: list[str] = []
+    else:
+        bridge["Screen Rank Score"] = bridge["Bridge Screening Score"] * (
+            1 + 0.15 * (bridge["Emergency Priority"] - 1)
+        )
+        bridge_ids = bridge.nlargest(
+            ROAD_BRIDGE_CANDIDATES,
+            "Screen Rank Score",
+        )["Road Section ID"].tolist()
+
+    priority_indices = np.argsort(objective_weight)[-ROAD_PRIORITY_CELL_COUNT:]
+    priority_cells = gpd.GeoDataFrame(
+        {"Priority Weight": objective_weight[priority_indices]},
+        geometry=cell_points.iloc[priority_indices].to_numpy(),
+        crs=cell_points.crs,
     )
-    return candidate_frame.nlargest(ROAD_SCREEN_CANDIDATES, "Screen Rank Score").copy()
+    nearest = gpd.sjoin_nearest(
+        priority_cells,
+        eligible[["Road Section ID", "Geometry"]],
+        how="left",
+        max_distance=ROAD_PROXIMITY_DISTANCE_M,
+        distance_col="Distance to Road Section (m)",
+    )
+    nearest = nearest.dropna(subset=["Road Section ID"]).copy()
+    nearest["Proximity Screening Score"] = nearest["Priority Weight"] / (
+        1 + nearest["Distance to Road Section (m)"] / 1_000
+    )
+    proximity = nearest.groupby("Road Section ID", as_index=False).agg(
+        **{"Proximity Screening Score": ("Proximity Screening Score", "sum")}
+    )
+    proximity_ids = proximity.nlargest(
+        ROAD_PROXIMITY_CANDIDATES,
+        "Proximity Screening Score",
+    )["Road Section ID"].astype(str).tolist()
+
+    candidate_ids = list(dict.fromkeys(bridge_ids + proximity_ids))
+    if not candidate_ids:
+        raise ValueError("No event-exposed road-section candidates were screened")
+    candidate_frame = eligible.loc[
+        eligible["Road Section ID"].astype(str).isin(candidate_ids)
+    ].copy()
+    candidate_frame["Road Section ID"] = candidate_frame["Road Section ID"].astype(str)
+    candidate_frame = candidate_frame.merge(
+        bridge[["Road Section ID", "Bridge Screening Score", "Screen Rank Score"]]
+        if not bridge.empty
+        else pd.DataFrame(
+            columns=["Road Section ID", "Bridge Screening Score", "Screen Rank Score"]
+        ),
+        how="left",
+        on="Road Section ID",
+    ).merge(
+        proximity,
+        how="left",
+        on="Road Section ID",
+    )
+    candidate_frame["Bridge Screening Score"] = candidate_frame[
+        "Bridge Screening Score"
+    ].fillna(0.0)
+    candidate_frame["Screen Rank Score"] = candidate_frame["Screen Rank Score"].fillna(0.0)
+    candidate_frame["Proximity Screening Score"] = candidate_frame[
+        "Proximity Screening Score"
+    ].fillna(0.0)
+    candidate_frame["Screened as Bridge"] = candidate_frame["Road Section ID"].isin(
+        bridge_ids
+    )
+    candidate_frame["Screened by Consequence Proximity"] = candidate_frame[
+        "Road Section ID"
+    ].isin(proximity_ids)
+    candidate_frame = gpd.GeoDataFrame(
+        candidate_frame,
+        geometry="Geometry",
+        crs=eligible.crs,
+    )
+    candidate_frame = candidate_frame.sort_values(
+        ["Screened as Bridge", "Screen Rank Score", "Proximity Screening Score"],
+        ascending=False,
+        kind="stable",
+    ).head(ROAD_SCREEN_CANDIDATES)
+    return candidate_frame.reset_index(drop=True)
 
 
 def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDataFrame]:
@@ -378,6 +444,7 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
 
     edge_columns = [
         "Road Edge ID",
+        "Road Section ID",
         "From Node ID",
         "To Node ID",
         "Baseline Edge Travel Time (min)",
@@ -389,8 +456,11 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         "Road Category",
         "Geometry",
     ]
-    all_edges = gpd.read_parquet(EDGE_PATH, columns=edge_columns).to_crs(PROJECTED_CRS)
+    all_edges = gpd.read_parquet(SECTION_EDGE_PATH, columns=edge_columns).to_crs(
+        PROJECTED_CRS
+    )
     all_edges["Road Edge ID"] = all_edges["Road Edge ID"].astype("string")
+    all_edges["Road Section ID"] = all_edges["Road Section ID"].astype("string")
     central_mask = scenario_availability(all_edges, "central")
     eligible_mask = all_edges["Road Available"].fillna(False) & all_edges[
         "Network Analysis Eligible"
@@ -478,53 +548,108 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         population_weight,
     )
 
-    bridge_candidates = road_bridge_candidates(
+    sections = gpd.read_parquet(SECTION_INTERVENTION_PATH).to_crs(PROJECTED_CRS)
+    sections["Road Section ID"] = sections["Road Section ID"].astype("string")
+    road_candidates = road_section_candidates(
         central_graph,
-        removed_edges,
+        sections,
         demand_nodes,
         station_sources,
         objective_weight,
+        cell_points,
     )
-    edge_lookup = all_edges.set_index("Road Edge ID", drop=False)
-    road_penalty_cache: dict[frozenset[str], np.ndarray] = {}
+    section_lookup = sections.set_index("Road Section ID", drop=False)
+    candidate_ids = road_candidates["Road Section ID"].astype(str).tolist()
+    candidate_cost = road_candidates.set_index("Road Section ID")[
+        "Road Restoration Cost Proxy"
+    ].astype(float)
+    sparse_network = build_compact_fire_network(include_event_removed=True)
+    if not np.array_equal(
+        sparse_network.mesh_codes.astype(str),
+        demand["Mesh Code"].astype(str).to_numpy(),
+    ):
+        raise ValueError("Sparse road network demand order does not match interventions")
+    section_position = pd.Series(
+        np.arange(len(sparse_network.road_section_ids), dtype=np.int32),
+        index=sparse_network.road_section_ids,
+    )
+    if not set(candidate_ids).issubset(section_position.index):
+        raise ValueError("A screened restoration section is absent from the sparse network")
+    sparse_baseline_time, _ = sparse_network.route()
+    sparse_baseline_time = np.minimum(sparse_baseline_time, UNMET_SERVICE_CAP_MIN)
+    baseline_difference = np.nanmax(np.abs(sparse_baseline_time - baseline_time))
+    if baseline_difference > 1e-5:
+        raise ValueError(
+            "Sparse event baseline does not reproduce the accepted station OD matrix: "
+            f"maximum difference={baseline_difference:.6g} minutes"
+        )
+    road_time_cache: dict[frozenset[str], np.ndarray] = {
+        frozenset(): baseline_time
+    }
+    road_penalty_cache: dict[frozenset[str], np.ndarray] = {
+        frozenset(): baseline_penalty
+    }
 
-    def road_bundle_benefit(edge_ids: list[str]) -> float:
-        key = frozenset(edge_ids)
+    def restored_mask(section_ids: frozenset[str]) -> np.ndarray:
+        mask = np.zeros(len(sparse_network.road_section_ids), dtype=bool)
+        if section_ids:
+            mask[section_position.loc[list(section_ids)].to_numpy(np.int32)] = True
+        return mask
+
+    def road_bundle_time_benefit(section_ids: list[str]) -> float:
+        """Fast screening benefit using exact nearest-base rerouting."""
+        key = frozenset(section_ids)
+        if key not in road_time_cache:
+            response_time, _ = sparse_network.route(
+                restored=restored_mask(key),
+            )
+            road_time_cache[key] = np.minimum(response_time, UNMET_SERVICE_CAP_MIN)
+        candidate_penalty = accessibility_penalty(
+            road_time_cache[key],
+            baseline_count,
+        )
+        return float(objective_weight @ (baseline_penalty - candidate_penalty))
+
+    def road_bundle_benefit(section_ids: list[str]) -> float:
+        """Final benefit using nearest time and exact 10-minute backup counts."""
+        key = frozenset(section_ids)
         if key not in road_penalty_cache:
-            restored = edge_lookup.loc[list(key)]
-            scenario_edges = gpd.GeoDataFrame(
-                pd.concat([central_edges, restored], ignore_index=True),
-                geometry="Geometry",
-                crs=central_edges.crs,
-            ).drop_duplicates("Road Edge ID")
-            graph = build_augmented_graph(scenario_edges, connectors)
-            response_time, qualifying = network_metrics(
-                graph,
-                station_sources,
-                demand_lookup,
-                len(context),
+            response_time, qualifying, _ = sparse_network.route_metrics(
+                restored=restored_mask(key),
+                backup_threshold_min=BACKUP_THRESHOLD_MIN,
+                response_cap_min=UNMET_SERVICE_CAP_MIN,
             )
             road_penalty_cache[key] = accessibility_penalty(response_time, qualifying)
         return float(objective_weight @ (baseline_penalty - road_penalty_cache[key]))
 
-    bridge_ids = bridge_candidates["Road Edge ID"].astype("string").tolist()
+    singleton_benefit = {
+        section_id: road_bundle_time_benefit([section_id])
+        for section_id in candidate_ids
+    }
+    candidate_ids = [
+        section_id for section_id in candidate_ids if singleton_benefit[section_id] > 0
+    ]
+    if not candidate_ids:
+        raise ValueError("Screened road sections produced no positive accessibility gain")
+
     road_selected: list[str] = []
-    road_benefits: list[float] = []
     for budget in range(1, MAX_BUDGET + 1):
-        best_edge = None
+        best_section = None
         best_benefit = -np.inf
-        for edge_id in bridge_ids:
-            if edge_id in road_selected:
+        for section_id in candidate_ids:
+            if section_id in road_selected:
                 continue
-            benefit = road_bundle_benefit(road_selected + [edge_id])
+            benefit = road_bundle_time_benefit(road_selected + [section_id])
             if benefit > best_benefit:
                 best_benefit = benefit
-                best_edge = edge_id
-        if best_edge is None:
+                best_section = section_id
+        if best_section is None:
             break
-        road_selected.append(best_edge)
-        road_benefits.append(best_benefit)
-        print(f"road-restoration greedy budget: {budget}/{MAX_BUDGET}", flush=True)
+        road_selected.append(best_section)
+        print(
+            f"road-section count screening budget: {budget}/{MAX_BUDGET}",
+            flush=True,
+        )
 
     category_priority = {
         "National Expressway or Equivalent": 4,
@@ -533,21 +658,70 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         "Municipal Road or Equivalent": 1,
         "Other": 0,
     }
-    baseline_order = bridge_candidates.assign(
-        Category_Priority=bridge_candidates["Road Category"].map(category_priority).fillna(0)
+    emergency_priority = {
+        "Primary Emergency Road": 3,
+        "Secondary Emergency Road": 2,
+        "None": 1,
+    }
+    baseline_order = road_candidates.loc[
+        road_candidates["Road Section ID"].astype(str).isin(candidate_ids)
+    ].assign(
+        Category_Priority=lambda frame: frame["Road Category"].map(
+            category_priority
+        ).fillna(0),
+        Emergency_Priority=lambda frame: frame["Emergency Route Membership"].map(
+            emergency_priority
+        ).fillna(1),
     ).sort_values(
-        ["Category_Priority", "Emergency Priority", "Bridge Screening Score"],
+        ["Category_Priority", "Emergency_Priority", "Bridge Screening Score"],
         ascending=False,
         kind="stable",
-    )["Road Edge ID"].astype("string").tolist()
-    road_baseline_selected: list[str] = []
-    road_baseline_benefits: list[float] = []
-    for edge_id in baseline_order[:MAX_BUDGET]:
-        road_baseline_selected.append(edge_id)
-        road_baseline_benefits.append(road_bundle_benefit(road_baseline_selected))
+    )["Road Section ID"].astype(str).tolist()
+    road_baseline_selected = baseline_order[:MAX_BUDGET]
+    cost_order = sorted(
+        candidate_ids,
+        key=lambda section_id: (
+            singleton_benefit[section_id] / candidate_cost.loc[section_id]
+        ),
+        reverse=True,
+    )
+
+    def nested_bundles_within_cost(order: list[str]) -> list[list[str]]:
+        selected: list[str] = []
+        used = 0.0
+        bundles: list[list[str]] = []
+        for budget in range(1, MAX_BUDGET + 1):
+            for section_id in order:
+                if section_id in selected:
+                    continue
+                cost = float(candidate_cost.loc[section_id])
+                if used + cost <= float(budget) + 1e-12:
+                    selected.append(section_id)
+                    used += cost
+            bundles.append(selected.copy())
+        return bundles
+
+    road_count_bundles = [
+        road_selected[: min(budget, len(road_selected))]
+        for budget in range(1, MAX_BUDGET + 1)
+    ]
+    road_baseline_count_bundles = [
+        road_baseline_selected[: min(budget, len(road_baseline_selected))]
+        for budget in range(1, MAX_BUDGET + 1)
+    ]
+    road_cost_bundles = nested_bundles_within_cost(cost_order)
+    road_baseline_cost_bundles = nested_bundles_within_cost(baseline_order)
+    road_count_benefits = [road_bundle_benefit(bundle) for bundle in road_count_bundles]
+    road_baseline_count_benefits = [
+        road_bundle_benefit(bundle) for bundle in road_baseline_count_bundles
+    ]
+    road_cost_benefits = [road_bundle_benefit(bundle) for bundle in road_cost_bundles]
+    road_baseline_cost_benefits = [
+        road_bundle_benefit(bundle) for bundle in road_baseline_cost_bundles
+    ]
 
     performance_records: list[dict[str, object]] = []
-    performance_specs = (
+    count_performance_specs = (
         (
             "Temporary response base",
             "Greedy consequence reduction",
@@ -576,23 +750,84 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
             "Priority road restoration",
             "Greedy consequence reduction",
             road_selected,
-            road_benefits,
+            road_count_benefits,
         ),
         (
             "Priority road restoration",
             "Simple baseline",
             road_baseline_selected,
-            road_baseline_benefits,
+            road_baseline_count_benefits,
         ),
     )
-    for action_type, strategy, selected, benefits in performance_specs:
+    for action_type, strategy, selected, benefits in count_performance_specs:
         for budget, benefit in enumerate(benefits, start=1):
+            selected_ids = selected[:budget]
+            is_road = action_type == "Priority road restoration"
             performance_records.append(
                 {
                     "Action Type": action_type,
                     "Strategy": strategy,
+                    "Budget Definition": (
+                        "Road section count" if is_road else "Action count"
+                    ),
                     "Budget": budget,
-                    "Selected Action IDs": " | ".join(map(str, selected[:budget])),
+                    "Budget Used": float(budget),
+                    "Selected Action IDs": " | ".join(map(str, selected_ids)),
+                    "Selected Road Section Count": (
+                        len(selected_ids) if is_road else np.nan
+                    ),
+                    "Selected Road Section Length (m)": (
+                        float(
+                            section_lookup.loc[
+                                selected_ids,
+                                "Road Section Length (m)",
+                            ].sum()
+                        )
+                        if is_road and selected_ids
+                        else np.nan
+                    ),
+                    "Road Restoration Cost Proxy": (
+                        float(candidate_cost.loc[selected_ids].sum())
+                        if is_road and selected_ids
+                        else np.nan
+                    ),
+                    "Intervention Benefit": benefit,
+                    "Consequence Reduction Share": benefit / baseline_loss,
+                    "Baseline Combined-Stress Loss": baseline_loss,
+                }
+            )
+
+    for strategy, bundles, benefits in (
+        ("Greedy consequence reduction", road_cost_bundles, road_cost_benefits),
+        ("Simple baseline", road_baseline_cost_bundles, road_baseline_cost_benefits),
+    ):
+        for budget, (selected_ids, benefit) in enumerate(
+            zip(bundles, benefits, strict=True),
+            start=1,
+        ):
+            used_cost = (
+                float(candidate_cost.loc[selected_ids].sum()) if selected_ids else 0.0
+            )
+            performance_records.append(
+                {
+                    "Action Type": "Priority road restoration",
+                    "Strategy": strategy,
+                    "Budget Definition": "Normalized event-exposed length",
+                    "Budget": budget,
+                    "Budget Used": used_cost,
+                    "Selected Action IDs": " | ".join(selected_ids),
+                    "Selected Road Section Count": len(selected_ids),
+                    "Selected Road Section Length (m)": (
+                        float(
+                            section_lookup.loc[
+                                selected_ids,
+                                "Road Section Length (m)",
+                            ].sum()
+                        )
+                        if selected_ids
+                        else 0.0
+                    ),
+                    "Road Restoration Cost Proxy": used_cost,
                     "Intervention Benefit": benefit,
                     "Consequence Reduction Share": benefit / baseline_loss,
                     "Baseline Combined-Stress Loss": baseline_loss,
@@ -607,6 +842,10 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
                 "Action ID": f"PREPOSITION::{context.iloc[index]['Mesh Code']}",
                 "Action Type": "Temporary response base",
                 "Selection Rank": rank,
+                "Road Selection Basis": None,
+                "Road Section ID": None,
+                "Road Section Length (m)": np.nan,
+                "Road Restoration Cost Proxy": np.nan,
                 "Action Description": "Temporary dispatch origin at a screened 125 m cell",
                 "Geometry": cell_points.iloc[index],
             }
@@ -617,21 +856,38 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
                 "Action ID": f"WATER::{context.iloc[index]['Mesh Code']}",
                 "Action Type": "Bounded water support",
                 "Selection Rank": rank,
+                "Road Selection Basis": None,
+                "Road Section ID": None,
+                "Road Section Length (m)": np.nan,
+                "Road Restoration Cost Proxy": np.nan,
                 "Action Description": "Temporary water support within a 1 km screening radius",
                 "Geometry": cell_points.iloc[index],
             }
         )
-    for rank, edge_id in enumerate(road_selected, start=1):
-        row = edge_lookup.loc[edge_id]
-        action_records.append(
-            {
-                "Action ID": f"ROAD::{edge_id}",
-                "Action Type": "Priority road restoration",
-                "Selection Rank": rank,
-                "Action Description": "Restore one disrupted component-bridging road edge",
-                "Geometry": row["Geometry"],
-            }
-        )
+    for selection_basis, selected_sections in (
+        ("Road section count", road_selected),
+        ("Normalized event-exposed length", road_cost_bundles[-1]),
+    ):
+        for rank, section_id in enumerate(selected_sections, start=1):
+            row = section_lookup.loc[section_id]
+            action_records.append(
+                {
+                    "Action ID": f"ROAD::{selection_basis}::{section_id}",
+                    "Action Type": "Priority road restoration",
+                    "Selection Rank": rank,
+                    "Road Selection Basis": selection_basis,
+                    "Road Section ID": section_id,
+                    "Road Section Length (m)": float(row["Road Section Length (m)"]),
+                    "Road Restoration Cost Proxy": float(
+                        row["Road Restoration Cost Proxy"]
+                    ),
+                    "Action Description": (
+                        "Restore the event-exposed internal edges of one "
+                        "junction-to-junction road section"
+                    ),
+                    "Geometry": row["Geometry"],
+                }
+            )
     actions = gpd.GeoDataFrame(action_records, geometry="Geometry", crs=PROJECTED_CRS)
 
     ACTION_PATH.parent.mkdir(parents=True, exist_ok=True)

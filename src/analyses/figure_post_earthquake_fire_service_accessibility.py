@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Map normal and disrupted fire-service accessibility across Kumamoto.
+"""Map event-specific and stochastic fire-service accessibility in Kumamoto.
 
-The four panels report nominal network travel time, redundancy, and shortest-
-route concentration under declared scenarios. They are planning screens rather
-than observed emergency response times or confirmed road closures.
+The four panels report normal response time, event-related delay, lost backup
+coverage, and timely-response reliability under additional road-section
+uncertainty. They are planning screens rather than observed response times.
 """
 
 from __future__ import annotations
@@ -16,13 +16,18 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colorbar import ColorbarBase
 from matplotlib.colors import Normalize
-from matplotlib.lines import Line2D
 import numpy as np
+import pandas as pd
 from pyproj import Transformer
 import seaborn as sns
 from shapely.geometry import LineString
 
-from fire_service_access_common import add_single_route_dependence
+from fire_service_access_common import (
+    BACKUP_THRESHOLD_MIN,
+    build_station_od,
+    fire_service_access_layer,
+)
+from fire_service_reliability_common import run_main_reliability
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,14 +44,49 @@ FIGURE_DPI = 400
 
 
 def load_analysis() -> gpd.GeoDataFrame:
-    """Join the cached accessibility metrics to populated 125 m cells."""
+    """Join event accessibility and formal road-reliability metrics to cells."""
     mesh = gpd.read_parquet(MESH_PATH, columns=["Mesh Code", "Geometry"]).to_crs(
         PROJECTED_CRS
     )
     mesh["Mesh Code"] = mesh["Mesh Code"].astype("string")
-    access = add_single_route_dependence()
+    access = fire_service_access_layer()
     access["Mesh Code"] = access["Mesh Code"].astype("string")
-    return mesh.merge(access, on="Mesh Code", how="left", validate="one_to_one")
+    normal_od, demand, _ = build_station_od("normal")
+    normal_backup = np.maximum(
+        (normal_od <= BACKUP_THRESHOLD_MIN).sum(axis=0) - 1,
+        0,
+    ).astype(np.int16)
+    normal_frame = pd.DataFrame(
+        {
+            "Mesh Code": demand["Mesh Code"].astype("string"),
+            "Normal Backup Fire Base Count": normal_backup,
+        }
+    )
+    reliability = run_main_reliability()
+    reliability["Mesh Code"] = reliability["Mesh Code"].astype("string")
+    analysis = mesh.merge(access, on="Mesh Code", how="left", validate="one_to_one")
+    analysis = analysis.merge(
+        normal_frame,
+        on="Mesh Code",
+        how="left",
+        validate="one_to_one",
+    ).merge(
+        reliability,
+        on="Mesh Code",
+        how="left",
+        validate="one_to_one",
+    )
+    analysis["Response Time Increase (min)"] = np.maximum(
+        analysis["Disrupted Response Time (min)"]
+        - analysis["Normal Response Time (min)"],
+        0,
+    )
+    analysis["Backup Fire Bases Lost"] = np.maximum(
+        analysis["Normal Backup Fire Base Count"]
+        - analysis["Backup Fire Base Count"],
+        0,
+    )
+    return analysis
 
 
 def graticule_values(lower: float, upper: float, step: float) -> list[float]:
@@ -212,30 +252,30 @@ def make_figure(mesh: gpd.GeoDataFrame) -> None:
             "a",
         ),
         (
-            "Disrupted Response Time (min)",
+            "Response Time Increase (min)",
             "YlOrRd",
             Normalize(0, 30),
             [0, 5, 10, 20, 30],
             ["0", "5", "10", "20", "30+"],
-            "Response time under road disruption (minutes)",
+            "Additional response time after event disruption (minutes)",
             "b",
         ),
         (
-            "Backup Fire Base Count",
-            "YlGnBu",
+            "Backup Fire Bases Lost",
+            "YlOrRd",
             Normalize(0, 5),
             [0, 1, 3, 5],
             ["0", "1", "3", "5+"],
-            "Additional bases able to arrive within 10 minutes",
+            "Backup bases lost within 10 minutes",
             "c",
         ),
         (
-            "Single Route Dependence",
-            "YlOrRd",
-            Normalize(0.5, 1),
-            [0.5, 0.75, 1],
-            ["Half", "Three quarters", "All"],
-            "Largest share of base routes using the same road segment",
+            "Timely Response Probability",
+            "RdYlGn",
+            Normalize(0, 1),
+            [0, 0.5, 0.75, 1],
+            ["0", "Half", "Three quarters", "All"],
+            "Chance of response within 10 minutes under added road uncertainty",
             "d",
         ),
     )
@@ -279,29 +319,6 @@ def make_figure(mesh: gpd.GeoDataFrame) -> None:
         for spine in color_ax.spines.values():
             spine.set_visible(False)
 
-    axes[3].legend(
-        handles=[
-            Line2D(
-                [0],
-                [0],
-                marker="s",
-                linestyle="none",
-                markerfacecolor="#c9ced2",
-                markeredgecolor="none",
-                markersize=5,
-                label="No base within 10 minutes",
-            )
-        ],
-        loc="lower left",
-        frameon=True,
-        framealpha=0.9,
-        facecolor="white",
-        edgecolor="#a9b1b7",
-        fontsize=6.6,
-        handletextpad=0.35,
-        borderpad=0.45,
-    )
-
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUTPUT, dpi=FIGURE_DPI, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -310,15 +327,15 @@ def make_figure(mesh: gpd.GeoDataFrame) -> None:
 def main() -> None:
     mesh = load_analysis()
     make_figure(mesh)
-    served = mesh["Single Route Dependence"].notna()
     print(f"Saved: {OUTPUT.relative_to(ROOT)}")
     print(
         "Diagnostics: "
         f"cells={len(mesh):,}; "
         f"normal median={mesh['Normal Response Time (min)'].median():.2f} min; "
         f"disrupted median={mesh['Disrupted Response Time (min)'].median():.2f} min; "
-        f"served within 10 min={served.sum():,}; "
-        f"fully shared route={(mesh.loc[served, 'Single Route Dependence'] >= 0.999).sum():,}"
+        f"median delay={mesh['Response Time Increase (min)'].median():.2f} min; "
+        f"mean 10-minute reliability={mesh['Timely Response Probability'].mean():.3f}; "
+        f"1,000-replicate 3% length-dependent scenario"
     )
 
 

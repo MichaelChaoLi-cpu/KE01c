@@ -48,8 +48,18 @@ ACTION_MARKERS = {
 SHORT_LABELS = {
     "Temporary response base": "Response base",
     "Bounded water support": "Water support",
-    "Priority road restoration": "Road restoration",
+    "Priority road restoration": "Road sections",
 }
+BAR_ITEMS = (
+    ("Temporary response base", "Action count", "Response base"),
+    ("Bounded water support", "Action count", "Water support"),
+    ("Priority road restoration", "Road section count", "Road: 3 sections"),
+    (
+        "Priority road restoration",
+        "Normalized event-exposed length",
+        "Road: length budget 3",
+    ),
+)
 
 
 def graticule_values(lower: float, upper: float, step: float) -> list[float]:
@@ -203,11 +213,14 @@ def make_figure(
     axes = (map_ax, bar_ax, curve_ax)
 
     boundary.plot(ax=map_ax, color="#f0f2f3", edgecolor="none", zorder=0)
-    context.plot(
+    priority_context = context.loc[
+        context["Combined Stress Consequence Rank"] >= 0.90
+    ]
+    priority_context.plot(
         ax=map_ax,
         column="Combined Stress Consequence Rank",
         cmap="YlOrRd",
-        norm=Normalize(0, 1),
+        norm=Normalize(0.90, 1),
         linewidth=0,
         rasterized=True,
         zorder=1,
@@ -243,7 +256,10 @@ def make_figure(
                 linewidth=0.65,
                 zorder=6,
             )
-    roads = mapped.loc[mapped["Action Type"].eq("Priority road restoration")]
+    roads = mapped.loc[
+        mapped["Action Type"].eq("Priority road restoration")
+        & mapped["Road Selection Basis"].eq("Road section count")
+    ]
     if not roads.empty:
         roads.plot(
             ax=map_ax,
@@ -268,15 +284,15 @@ def make_figure(
     colorbar = mpl.colorbar.ColorbarBase(
         colorbar_ax,
         cmap=mpl.colormaps["YlOrRd"],
-        norm=Normalize(0, 1),
+        norm=Normalize(0.90, 1),
         orientation="horizontal",
     )
     colorbar.outline.set_visible(False)
-    colorbar.set_ticks([0.08, 0.5, 0.92])
-    colorbar.set_ticklabels(["Lower", "Middle", "Higher"])
+    colorbar.set_ticks([0.90, 0.95, 1.00])
+    colorbar.set_ticklabels(["Top 10%", "Top 5%", "Highest"])
     colorbar.ax.tick_params(labelsize=7.2, length=2.5, colors="#4f606d")
     colorbar.set_label(
-        "Combined-stress conditional consequence (relative rank)",
+        "Highest combined-stress conditional consequence cells",
         fontsize=8,
         color="#425461",
     )
@@ -309,7 +325,7 @@ def make_figure(
             markerfacecolor=ACTION_COLORS["Priority road restoration"],
             markeredgecolor="white",
             markersize=6,
-            label="Restored road edge",
+            label="Restored road section",
         ),
     ]
     map_ax.legend(
@@ -323,9 +339,8 @@ def make_figure(
     )
 
     bar_data = performance.loc[performance["Budget"].eq(BAR_BUDGET)].copy()
-    action_order = list(SHORT_LABELS)
     strategy_order = ["Greedy consequence reduction", "Simple baseline"]
-    x_positions = np.arange(len(action_order), dtype=float)
+    x_positions = np.arange(len(BAR_ITEMS), dtype=float)
     bar_width = 0.34
     strategy_styles = {
         "Greedy consequence reduction": ("#2d758e", "Prioritized"),
@@ -333,9 +348,10 @@ def make_figure(
     }
     for strategy_index, strategy in enumerate(strategy_order):
         values = []
-        for action_type in action_order:
+        for action_type, budget_definition, _ in BAR_ITEMS:
             row = bar_data.loc[
                 bar_data["Action Type"].eq(action_type)
+                & bar_data["Budget Definition"].eq(budget_definition)
                 & bar_data["Strategy"].eq(strategy)
             ]
             values.append(100 * float(row["Consequence Reduction Share"].iloc[0]))
@@ -351,9 +367,9 @@ def make_figure(
         )
         bar_ax.bar_label(bars, fmt="%.2f", fontsize=7, padding=2, color="#425461")
     bar_ax.set_xticks(x_positions)
-    bar_ax.set_xticklabels([SHORT_LABELS[key] for key in action_order], fontsize=8)
+    bar_ax.set_xticklabels([item[2] for item in BAR_ITEMS], fontsize=7.6)
     bar_ax.set_ylabel("Combined-stress consequence reduced (%)", fontsize=9)
-    bar_ax.set_xlabel("Three class-specific action units", fontsize=9)
+    bar_ax.set_xlabel("Budget level 3 within each action class", fontsize=9)
     bar_ax.tick_params(axis="y", labelsize=8)
     bar_ax.set_ylim(
         0,
@@ -367,24 +383,46 @@ def make_figure(
     prioritized = performance.loc[
         performance["Strategy"].eq("Greedy consequence reduction")
     ].copy()
-    for action_type in action_order:
-        subset = prioritized.loc[prioritized["Action Type"].eq(action_type)].sort_values(
-            "Budget"
-        )
+    curve_items = (
+        ("Temporary response base", "Action count", "Response base", "o", "#246b9a", "-"),
+        ("Bounded water support", "Action count", "Water support", "s", "#1f927a", "-"),
+        (
+            "Priority road restoration",
+            "Road section count",
+            "Road: section count",
+            "D",
+            "#c84d3a",
+            "-",
+        ),
+        (
+            "Priority road restoration",
+            "Normalized event-exposed length",
+            "Road: length-aware budget",
+            "^",
+            "#7b4f9d",
+            "--",
+        ),
+    )
+    for action_type, budget_definition, label, marker, color, linestyle in curve_items:
+        subset = prioritized.loc[
+            prioritized["Action Type"].eq(action_type)
+            & prioritized["Budget Definition"].eq(budget_definition)
+        ].sort_values("Budget")
         curve_ax.plot(
             subset["Budget"],
             100 * subset["Consequence Reduction Share"],
-            marker=ACTION_MARKERS.get(action_type, "D"),
+            marker=marker,
             markersize=5,
             linewidth=1.7,
-            color=ACTION_COLORS[action_type],
-            label=SHORT_LABELS[action_type],
+            linestyle=linestyle,
+            color=color,
+            label=label,
         )
     curve_ax.set_xticks(range(1, 6))
-    curve_ax.set_xlabel("Number of class-specific action units", fontsize=9)
+    curve_ax.set_xlabel("Class-specific budget level", fontsize=9)
     curve_ax.set_ylabel("Combined-stress consequence reduced (%)", fontsize=9)
     curve_ax.tick_params(labelsize=8)
-    curve_ax.legend(frameon=False, fontsize=7.5, loc="upper left", ncol=3)
+    curve_ax.legend(frameon=False, fontsize=7.5, loc="upper left", ncol=4)
     curve_ax.grid(color="#d6dadd", linewidth=0.55)
     sns.despine(ax=curve_ax)
 
@@ -404,7 +442,8 @@ def main() -> None:
         & performance["Strategy"].eq("Greedy consequence reduction")
     ]
     summary = "; ".join(
-        f"{SHORT_LABELS[row['Action Type']]}={100 * row['Consequence Reduction Share']:.2f}%"
+        f"{SHORT_LABELS[row['Action Type']]} ({row['Budget Definition']})="
+        f"{100 * row['Consequence Reduction Share']:.2f}%"
         for _, row in budget_three.iterrows()
     )
     print(f"Saved: {OUTPUT.relative_to(ROOT)}")

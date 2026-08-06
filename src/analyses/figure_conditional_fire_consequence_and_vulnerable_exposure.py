@@ -65,6 +65,7 @@ FACILITY_SPECS = (
 PROJECTED_CRS = 6670
 GEOGRAPHIC_CRS = 6668
 FIGURE_DPI = 400
+TOP_PRIORITY_THRESHOLD = 0.90
 
 
 def percentile_rank(values: pd.Series) -> pd.Series:
@@ -285,7 +286,7 @@ def draw_panel_label(ax: plt.Axes, label: str) -> None:
 
 
 def make_figure(mesh: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame) -> None:
-    """Render the three planned consequence maps at 400 dpi."""
+    """Render only the highest-priority consequence cells at 400 dpi."""
     administrative = gpd.read_parquet(ADMIN_PATH).to_crs(mesh.crs)
     boundary = administrative.dissolve()
     bounds = tuple(boundary.total_bounds)
@@ -302,41 +303,40 @@ def make_figure(mesh: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame) -> None:
         }
     )
 
-    fig = plt.figure(figsize=(17.2, 6.6), constrained_layout=True)
-    grid = fig.add_gridspec(2, 3, height_ratios=(1, 0.035), wspace=0.07, hspace=0.035)
-    axes = [fig.add_subplot(grid[0, index]) for index in range(3)]
-    color_axes = [fig.add_subplot(grid[1, index]) for index in range(3)]
-    norm = Normalize(0, 1)
+    fig = plt.figure(figsize=(12.0, 6.6), constrained_layout=True)
+    grid = fig.add_gridspec(2, 2, height_ratios=(1, 0.035), wspace=0.07, hspace=0.035)
+    axes = [fig.add_subplot(grid[0, index]) for index in range(2)]
+    color_axes = [fig.add_subplot(grid[1, index]) for index in range(2)]
     panel_specs = (
         (
             "Population Conditional Fire Consequence Rank",
-            "Population-weighted conditional consequence (relative rank)",
+            "Population priority among the highest 10%",
             "a",
-        ),
-        (
-            "Older Population Conditional Fire Consequence Rank",
-            "Older-population conditional consequence (relative rank)",
-            "b",
+            "YlOrRd",
         ),
         (
             "Critical Facility Conditional Fire Consequence Rank",
-            "Critical-facility conditional consequence (relative rank)",
-            "c",
+            "Critical-service priority among the highest 10%",
+            "b",
+            "Purples",
         ),
     )
 
-    for ax, color_ax, (column, colorbar_label, panel_label) in zip(
+    for ax, color_ax, (column, colorbar_label, panel_label, colormap) in zip(
         axes, color_axes, panel_specs, strict=True
     ):
+        plot_column = f"{column} Top Priority"
+        mesh[plot_column] = mesh[column].where(mesh[column] >= TOP_PRIORITY_THRESHOLD)
+        norm = Normalize(TOP_PRIORITY_THRESHOLD, 1)
         boundary.plot(ax=ax, color="#f0f2f3", edgecolor="none", zorder=0)
         mesh.plot(
             ax=ax,
-            column=column,
-            cmap="YlOrRd",
+            column=plot_column,
+            cmap=colormap,
             norm=norm,
             linewidth=0,
             rasterized=True,
-            missing_kwds={"color": "#d9dde0"},
+            missing_kwds={"color": "#e5e8ea"},
             zorder=1,
         )
         administrative.boundary.plot(
@@ -352,13 +352,13 @@ def make_figure(mesh: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame) -> None:
 
         colorbar = ColorbarBase(
             color_ax,
-            cmap=mpl.colormaps["YlOrRd"],
+            cmap=mpl.colormaps[colormap],
             norm=norm,
             orientation="horizontal",
         )
         colorbar.outline.set_visible(False)
-        colorbar.set_ticks([0.08, 0.5, 0.92])
-        colorbar.set_ticklabels(["Lower", "Middle", "Higher"])
+        colorbar.set_ticks([0.90, 0.95, 1.00])
+        colorbar.set_ticklabels(["90th", "95th", "Highest"])
         colorbar.set_label(colorbar_label, fontsize=8, color="#425461")
         color_ax.tick_params(axis="x", labelsize=7.5, length=2.5, colors="#4f606d")
         color_ax.set_yticks([])
@@ -366,9 +366,14 @@ def make_figure(mesh: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame) -> None:
             spine.set_visible(False)
 
     for label, _, _, color, marker in FACILITY_SPECS:
-        subset = facilities.loc[facilities["Facility Class"].eq(label)]
+        subset = facilities.loc[
+            facilities["Facility Class"].eq(label)
+            & facilities["Critical Facility Conditional Fire Consequence Rank"].ge(
+                TOP_PRIORITY_THRESHOLD
+            )
+        ]
         subset.plot(
-            ax=axes[2],
+            ax=axes[1],
             color=color,
             marker=marker,
             markersize=2.1,
@@ -390,7 +395,7 @@ def make_figure(mesh: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame) -> None:
         )
         for label, _, _, color, marker in FACILITY_SPECS
     ]
-    axes[2].legend(
+    axes[1].legend(
         handles=legend_handles,
         loc="lower left",
         frameon=True,
@@ -420,7 +425,9 @@ def main() -> None:
         f"median disrupted response={mesh['Disrupted Response Time (min)'].median():.2f} min; "
         f"cells at 30-minute cap={(mesh['Disrupted Response Time (min)'] >= 30).sum():,}; "
         f"top-decile population consequence="
-        f"{(mesh['Population Conditional Fire Consequence Rank'] >= 0.9).sum():,}"
+        f"{(mesh['Population Conditional Fire Consequence Rank'] >= TOP_PRIORITY_THRESHOLD).sum():,}; "
+        f"priority facilities="
+        f"{(facilities['Critical Facility Conditional Fire Consequence Rank'] >= TOP_PRIORITY_THRESHOLD).sum():,}"
     )
 
 
