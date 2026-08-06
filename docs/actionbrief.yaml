@@ -1,0 +1,2048 @@
+doc_type: actionbrief
+version: 1.0.0
+datasetDictionary:
+  administrative_areas_preprocessed:
+    datasetSourceName: administrative_areas_preprocessed.parquet
+    datasetDescription: Municipality and ward polygons used for geographic aggregation, map boundaries, and reporting labels.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from a prior-project MLIT KSJ extract and standardized to readable fields with
+      source geometry retained.
+    datasetPeriod: Mixed official boundary vintage
+    datasetScale: Kumamoto Prefecture; 49 records
+    datasetSpatialResolution: Municipality and ward polygons
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  buildings_preprocessed:
+    datasetSourceName: buildings_preprocessed.parquet
+    datasetDescription: Individual GSI building-footprint polygons used to construct cell-level coverage, separation, and
+      continuity measures.
+    datasetAttribute: table
+    datasetProvider: Geospatial Information Authority of Japan (GSI)
+    datasetGenerationInfo: Copied immutably from the KE01 source snapshot and standardized without material, age, or use imputation.
+    datasetPeriod: Pre-event GSI vector-tile reference
+    datasetScale: Kumamoto Prefecture; 1,036,590 records
+    datasetSpatialResolution: Individual building-footprint polygons from zoom-15 vector tiles
+    datasetTemporalResolution: Cross-sectional reference
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  designated_shelters_preprocessed:
+    datasetSourceName: designated_shelters_preprocessed.parquet
+    datasetDescription: Mapped designated shelters used to represent critical-facility exposure and candidate staging locations.
+    datasetAttribute: table
+    datasetProvider: National and Kumamoto local-government evacuation-facility open data
+    datasetGenerationInfo: Copied immutably from the KE01 geospatial facility snapshot; designation fields and geometry were
+      retained.
+    datasetPeriod: Pre-event facility designation snapshot
+    datasetScale: Kumamoto Prefecture; 1,315 records
+    datasetSpatialResolution: Individual mapped facility points
+    datasetTemporalResolution: Static designation snapshot
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  earthquake_damage_evidence_reference_preprocessed:
+    datasetSourceName: earthquake_damage_evidence_reference_preprocessed.parquet
+    datasetDescription: Registry of official 2026 earthquake damage statements used only as event-context evidence.
+    datasetAttribute: table
+    datasetProvider: FDMA, Kumamoto Prefecture, Kumamoto City, and relevant utilities
+    datasetGenerationInfo: Copied immutably from the KE01 event-evidence registry; text fields were standardized and missing
+      values were preserved.
+    datasetPeriod: 2026-07-28 to 2026-08-02 event window
+    datasetScale: Kumamoto Prefecture; 9 records
+    datasetSpatialResolution: Prefecture-, municipality-, or reported-service-area records
+    datasetTemporalResolution: Irregular official event snapshots
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  emergency_evacuation_sites_preprocessed:
+    datasetSourceName: emergency_evacuation_sites_preprocessed.parquet
+    datasetDescription: Mapped emergency evacuation sites with earthquake and large-scale-fire designations.
+    datasetAttribute: table
+    datasetProvider: National and Kumamoto local-government evacuation-facility open data
+    datasetGenerationInfo: Copied immutably from the KE01 geospatial facility snapshot; designation fields and geometry were
+      retained.
+    datasetPeriod: Pre-event facility designation snapshot
+    datasetScale: Kumamoto Prefecture; 1,713 records
+    datasetSpatialResolution: Individual mapped facility points
+    datasetTemporalResolution: Static designation snapshot
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  emergency_transport_roads_preprocessed:
+    datasetSourceName: emergency_transport_roads_preprocessed.parquet
+    datasetDescription: Emergency transport road designations used to define bounded event-specific road-service assumptions.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from a prior-project MLIT KSJ extract and standardized to readable fields with
+      source geometry retained.
+    datasetPeriod: '2024'
+    datasetScale: Kumamoto Prefecture; 264 records
+    datasetSpatialResolution: Designated road lines
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  fire_dispatch_bases_preprocessed:
+    datasetSourceName: fire_dispatch_bases_preprocessed.parquet
+    datasetDescription: Fire stations and substations screened as nominal candidate dispatch origins for accessibility analysis.
+    datasetAttribute: table
+    datasetProvider: Fire and Disaster Management Agency and Kumamoto fire-service records
+    datasetGenerationInfo: Copied immutably from the KE01b reference layers and standardized for nominal accessibility analysis.
+    datasetPeriod: 2012 station roster with later organizational context
+    datasetScale: Kumamoto Prefecture; 94 records
+    datasetSpatialResolution: Individual base points
+    datasetTemporalResolution: Static reference roster
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  fire_jurisdictions_reference_preprocessed:
+    datasetSourceName: fire_jurisdictions_reference_preprocessed.parquet
+    datasetDescription: Fire-service jurisdiction records retained as contextual reference for response-system coverage.
+    datasetAttribute: table
+    datasetProvider: Fire and Disaster Management Agency and Kumamoto fire-service records
+    datasetGenerationInfo: Copied immutably from the KE01b reference layers and standardized for nominal accessibility analysis.
+    datasetPeriod: 2012 station roster with later organizational context
+    datasetScale: Kumamoto Prefecture; 1,823 records
+    datasetSpatialResolution: Jurisdiction or organization records
+    datasetTemporalResolution: Static reference roster
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  fire_organization_reference_preprocessed:
+    datasetSourceName: fire_organization_reference_preprocessed.parquet
+    datasetDescription: Fire-organization validation record retained as institutional context for the nominal response network.
+    datasetAttribute: table
+    datasetProvider: Fire and Disaster Management Agency and Kumamoto fire-service records
+    datasetGenerationInfo: Copied immutably from the KE01b reference layers and standardized for nominal accessibility analysis.
+    datasetPeriod: 2012 station roster with later organizational context
+    datasetScale: Kumamoto Prefecture; 1 records
+    datasetSpatialResolution: Jurisdiction or organization records
+    datasetTemporalResolution: Static reference roster
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  housing_damage_reference_preprocessed:
+    datasetSourceName: housing_damage_reference_preprocessed.parquet
+    datasetDescription: Official 2026 housing-damage snapshots used as contextual evidence, not as a building-level outcome.
+    datasetAttribute: table
+    datasetProvider: FDMA, Kumamoto Prefecture, Kumamoto City, and relevant utilities
+    datasetGenerationInfo: Copied immutably from the KE01 event-evidence registry; text fields were standardized and missing
+      values were preserved.
+    datasetPeriod: 2026-07-28 to 2026-08-02 event window
+    datasetScale: Kumamoto Prefecture; 5 records
+    datasetSpatialResolution: Prefecture-, municipality-, or reported-service-area records
+    datasetTemporalResolution: Irregular official event snapshots
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  landslide_zones_preprocessed:
+    datasetSourceName: landslide_zones_preprocessed.parquet
+    datasetDescription: Mapped landslide warning zones used in conservative road-disruption and hazard-exposure rules.
+    datasetAttribute: table
+    datasetProvider: Kumamoto Prefecture and MLIT National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from the KE01b hazard snapshot with designation classes and geometry preserved.
+    datasetPeriod: '2025'
+    datasetScale: Kumamoto Prefecture; 56,424 records
+    datasetSpatialResolution: Landslide warning-zone polygons
+    datasetTemporalResolution: Reference-year hazard designation
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  medical_facilities_preprocessed:
+    datasetSourceName: medical_facilities_preprocessed.parquet
+    datasetDescription: Mapped medical institutions and emergency-hospital attributes used for critical-facility exposure.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from a prior-project MLIT KSJ extract and standardized to readable fields with
+      source geometry retained.
+    datasetPeriod: '2020'
+    datasetScale: Kumamoto Prefecture; 2,561 records
+    datasetSpatialResolution: Individual facility points
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  mlit_fire_prevention_zones_preprocessed:
+    datasetSourceName: mlit_fire_prevention_zones_preprocessed.parquet
+    datasetDescription: MLIT fire-prevention and quasi-fire-prevention planning polygons used as planning context.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Downloaded from MLIT KSJ, extracted by logical layer, assigned readable English fields, and harmonized
+      to EPSG:6668.
+    datasetPeriod: '2024'
+    datasetScale: Kumamoto Prefecture; 14 records
+    datasetSpatialResolution: Urban-planning feature polygons
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  mlit_land_use_zones_preprocessed:
+    datasetSourceName: mlit_land_use_zones_preprocessed.parquet
+    datasetDescription: MLIT land-use zoning polygons with permitted floor-area and building-coverage ratios.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Downloaded from MLIT KSJ, extracted by logical layer, assigned readable English fields, and harmonized
+      to EPSG:6668.
+    datasetPeriod: '2024'
+    datasetScale: Kumamoto Prefecture; 1,255 records
+    datasetSpatialResolution: Urban-planning feature polygons
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  mlit_planned_roads_preprocessed:
+    datasetSourceName: mlit_planned_roads_preprocessed.parquet
+    datasetDescription: MLIT planned-road polygons used as supporting accessibility and urban-planning context.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Downloaded from MLIT KSJ, extracted by logical layer, assigned readable English fields, and harmonized
+      to EPSG:6668.
+    datasetPeriod: '2024'
+    datasetScale: Kumamoto Prefecture; 1,732 records
+    datasetSpatialResolution: Urban-planning feature polygons
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  mlit_urban_land_use_100m_preprocessed:
+    datasetSourceName: mlit_urban_land_use_100m_preprocessed.parquet
+    datasetDescription: MLIT 100 m urban land-use mesh used to identify dense development, open land, roads, parks, and water.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Downloaded from MLIT KSJ, extracted by logical layer, assigned readable English fields, and harmonized
+      to EPSG:6668.
+    datasetPeriod: '2021'
+    datasetScale: Kumamoto Prefecture; 371,094 records
+    datasetSpatialResolution: 100 m land-use cells
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  mlit_urban_parks_preprocessed:
+    datasetSourceName: mlit_urban_parks_preprocessed.parquet
+    datasetDescription: MLIT urban-park polygons used as mapped firebreak context and candidate staging-site inputs.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Downloaded from MLIT KSJ, extracted by logical layer, assigned readable English fields, and harmonized
+      to EPSG:6668.
+    datasetPeriod: '2024'
+    datasetScale: Kumamoto Prefecture; 709 records
+    datasetSpatialResolution: Urban-planning feature polygons
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  population_disclosure_groups_preprocessed:
+    datasetSourceName: population_disclosure_groups_preprocessed.parquet
+    datasetDescription: Disclosure-group population and household totals used where small 125 m cells are aggregated for confidentiality.
+    datasetAttribute: table
+    datasetProvider: Statistics Bureau of Japan / e-Stat
+    datasetGenerationInfo: Copied immutably from the KE01 census-derived snapshot and retained with disclosure-group handling.
+    datasetPeriod: 2020 Population Census
+    datasetScale: Kumamoto Prefecture; 36,657 records
+    datasetSpatialResolution: Disclosure-group records linked to 125 m cells
+    datasetTemporalResolution: Cross-sectional reference
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  population_mesh_125m_preprocessed:
+    datasetSourceName: population_mesh_125m_preprocessed.parquet
+    datasetDescription: Population, household, age, and disclosure attributes for the populated 125 m analysis grid.
+    datasetAttribute: table
+    datasetProvider: Statistics Bureau of Japan / e-Stat
+    datasetGenerationInfo: Copied immutably from the KE01 census-derived snapshot and retained with disclosure-group handling.
+    datasetPeriod: 2020 Population Census
+    datasetScale: Kumamoto Prefecture; 62,945 records
+    datasetSpatialResolution: 125 m population cells
+    datasetTemporalResolution: Cross-sectional reference
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  public_facilities_preprocessed:
+    datasetSourceName: public_facilities_preprocessed.parquet
+    datasetDescription: Mapped public offices and halls used for critical-facility exposure and candidate staging-site screening.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from a prior-project MLIT KSJ extract and standardized to readable fields with
+      source geometry retained.
+    datasetPeriod: '2022'
+    datasetScale: Kumamoto Prefecture; 1,660 records
+    datasetSpatialResolution: Individual facility points
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  road_centerlines_preprocessed:
+    datasetSourceName: road_centerlines_preprocessed.parquet
+    datasetDescription: MLIT road-centerline geometry and classifications used to build travel impedance and mapped road firebreaks.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from a prior-project MLIT KSJ extract and standardized to readable fields with
+      source geometry retained.
+    datasetPeriod: '2024'
+    datasetScale: Kumamoto Prefecture; 430,201 records
+    datasetSpatialResolution: Road-centerline segments
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  road_section_failure_probabilities_preprocessed:
+    datasetSourceName: road_section_failure_probabilities_preprocessed.parquet
+    datasetDescription: Calibrated junction-to-junction road-section failure inputs for declared stochastic stress scenarios.
+    datasetAttribute: table
+    datasetProvider: Authors
+    datasetGenerationInfo: Calibrated length-dependent closure probabilities for 0.5%, 1%, 3%, 5%, and 10% target unavailable-length
+      inputs.
+    datasetPeriod: 2026 scenario analysis using the 2024 source network
+    datasetScale: Kumamoto Prefecture; 1,719,220 records
+    datasetSpatialResolution: Junction-to-junction road section
+    datasetTemporalResolution: Declared scenario-by-severity grid
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  road_section_intervention_preprocessed:
+    datasetSourceName: road_section_intervention_preprocessed.parquet
+    datasetDescription: Road-section hazard exposure and relative restoration-resource proxies used for intervention screening.
+    datasetAttribute: table
+    datasetProvider: Authors
+    datasetGenerationInfo: Overlaid road sections with event-hazard classes and calculated exposed length and a relative restoration-resource
+      proxy.
+    datasetPeriod: 2026 event-specific scenario
+    datasetScale: Kumamoto Prefecture; 343,844 records
+    datasetSpatialResolution: Junction-to-junction road section
+    datasetTemporalResolution: Single event-specific analytical snapshot
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  road_sections_preprocessed:
+    datasetSourceName: road_sections_preprocessed.parquet
+    datasetDescription: Junction-to-junction road sections with length, edge-count, and route descriptors used as failure
+      and restoration units.
+    datasetAttribute: table
+    datasetProvider: Authors, derived from MLIT road centerlines
+    datasetGenerationInfo: Copied from the KE01b derived network, then validated for edge-to-section identity, routed length,
+      and central-graph use.
+    datasetPeriod: 2024 source network
+    datasetScale: Kumamoto Prefecture; 343,844 records
+    datasetSpatialResolution: Junction-to-junction road sections
+    datasetTemporalResolution: Static network representation
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  routable_road_edges_sectioned_preprocessed:
+    datasetSourceName: routable_road_edges_sectioned_preprocessed.parquet
+    datasetDescription: Routable road edges with validated road-section assignments used for shortest-path and rerouting calculations.
+    datasetAttribute: table
+    datasetProvider: Authors, derived from MLIT road centerlines
+    datasetGenerationInfo: Copied from the KE01b derived network, then validated for edge-to-section identity, routed length,
+      and central-graph use.
+    datasetPeriod: 2024 source network
+    datasetScale: Kumamoto Prefecture; 390,234 records
+    datasetSpatialResolution: Routable road edges
+    datasetTemporalResolution: Static network representation
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  schools_preprocessed:
+    datasetSourceName: schools_preprocessed.parquet
+    datasetDescription: Mapped schools and school-status attributes used for critical-facility exposure and staging-site screening.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from a prior-project MLIT KSJ extract and standardized to readable fields with
+      source geometry retained.
+    datasetPeriod: '2023'
+    datasetScale: Kumamoto Prefecture; 917 records
+    datasetSpatialResolution: Individual facility points
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  service_disruptions_preprocessed:
+    datasetSourceName: service_disruptions_preprocessed.parquet
+    datasetDescription: Official 2026 electricity and water service-disruption snapshots used to bound event-context scenarios.
+    datasetAttribute: table
+    datasetProvider: FDMA, Kumamoto Prefecture, Kumamoto City, and relevant utilities
+    datasetGenerationInfo: Copied immutably from the KE01 event-evidence registry; text fields were standardized and missing
+      values were preserved.
+    datasetPeriod: 2026-07-28 to 2026-08-02 event window
+    datasetScale: Kumamoto Prefecture; 14 records
+    datasetSpatialResolution: Prefecture-, municipality-, or reported-service-area records
+    datasetTemporalResolution: Irregular official event snapshots
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+  welfare_facilities_preprocessed:
+    datasetSourceName: welfare_facilities_preprocessed.parquet
+    datasetDescription: Mapped welfare facilities and service classes used for vulnerable-facility exposure.
+    datasetAttribute: table
+    datasetProvider: Ministry of Land, Infrastructure, Transport and Tourism (MLIT), National Land Numerical Information
+    datasetGenerationInfo: Copied immutably from a prior-project MLIT KSJ extract and standardized to readable fields with
+      source geometry retained.
+    datasetPeriod: '2023'
+    datasetScale: Kumamoto Prefecture; 4,470 records
+    datasetSpatialResolution: Individual facility points
+    datasetTemporalResolution: Reference-year cross-section
+    datasetPreprocessingInfo: Selected analysis variables were assigned readable English names; surrounding whitespace was
+      stripped from text and missing values were not imputed.
+variableDictionary:
+  shelter_id:
+    variableNameInDataset: Common ID
+    variableNameInArticle: Shelter Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Shelter Identifier is used as critical-facility exposure. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: designated_shelters_preprocessed
+    observationNumber: 1315
+  same_address_as_emergency_evacuation_site:
+    variableNameInDataset: Same Address as Emergency Evacuation Site
+    variableNameInArticle: Same Address as Emergency Evacuation Site
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Same Address as Emergency Evacuation Site is used as critical-facility exposure. Source-defined value
+      retained without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable
+      name; surrounding whitespace stripped for text fields.
+    variableSource: designated_shelters_preprocessed
+    observationNumber: 903
+  geometry:
+    variableNameInDataset: Geometry
+    variableNameInArticle: Geometry
+    variableAttribute: other
+    variableUnit: Geometry in the dataset's declared CRS
+    variableDescription: Geometry is used as spatial key. Spatial geometry with active GeoParquet metadata and a declared
+      CRS. Active geometry retained; source CRS preserved, with MLIT logical layers harmonized to EPSG:6668.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  evacuation_site_id:
+    variableNameInDataset: Common ID
+    variableNameInArticle: Evacuation Site Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Evacuation Site Identifier is used as critical-facility exposure. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: emergency_evacuation_sites_preprocessed
+    observationNumber: 1713
+  earthquake_designation:
+    variableNameInDataset: Earthquake
+    variableNameInArticle: Earthquake Designation
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Earthquake Designation is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: emergency_evacuation_sites_preprocessed
+    observationNumber: 1477
+  large_scale_fire_designation:
+    variableNameInDataset: Large-Scale Fire
+    variableNameInArticle: Large-Scale Fire Designation
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Large-Scale Fire Designation is used as supporting explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: emergency_evacuation_sites_preprocessed
+    observationNumber: 1038
+  same_address_as_designated_shelter:
+    variableNameInDataset: Same Address as Designated Shelter
+    variableNameInArticle: Same Address as Designated Shelter
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Same Address as Designated Shelter is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: emergency_evacuation_sites_preprocessed
+    observationNumber: 903
+  building_id:
+    variableNameInDataset: Building ID
+    variableNameInArticle: Building Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Building Identifier is used as spread explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: buildings_preprocessed
+    observationNumber: 1036590
+  building_feature_code:
+    variableNameInDataset: Feature Code
+    variableNameInArticle: Building Feature Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Building Feature Code is used as spread explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: buildings_preprocessed
+    observationNumber: 1036590
+  building_area_m2:
+    variableNameInDataset: Building Area m2
+    variableNameInArticle: Building Area (m2)
+    variableAttribute: continuous
+    variableUnit: Square metres
+    variableDescription: Building Area (m2) is used as spread explanatory. Source building-footprint area in square metres.
+      Selected and assigned a confirmed English readable name; surrounding whitespace stripped for text fields.
+    variableSource: buildings_preprocessed
+    observationNumber: 1036590
+  medical_facility_id:
+    variableNameInDataset: Support Facility ID
+    variableNameInArticle: Medical Facility Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Medical Facility Identifier is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: medical_facilities_preprocessed
+    observationNumber: 2561
+  medical_institution_class:
+    variableNameInDataset: Medical Institution Class
+    variableNameInArticle: Medical Institution Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Medical Institution Class is used as critical-facility exposure. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: medical_facilities_preprocessed
+    observationNumber: 2561
+  bed_count:
+    variableNameInDataset: Bed Count
+    variableNameInArticle: Bed Count
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Bed Count is used as supporting explanatory. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: medical_facilities_preprocessed
+    observationNumber: 2561
+  emergency_hospital_designation:
+    variableNameInDataset: Emergency Hospital Designation
+    variableNameInArticle: Emergency Hospital Designation
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Emergency Hospital Designation is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: medical_facilities_preprocessed
+    observationNumber: 2561
+  disaster_base_hospital_class:
+    variableNameInDataset: Disaster Base Hospital Class
+    variableNameInArticle: Disaster Base Hospital Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Disaster Base Hospital Class is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: medical_facilities_preprocessed
+    observationNumber: 2561
+  public_facility_id:
+    variableNameInDataset: Support Facility ID
+    variableNameInArticle: Public Facility Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Public Facility Identifier is used as critical-facility exposure. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 1660
+  public_facility_class:
+    variableNameInDataset: Facility Class
+    variableNameInArticle: Public Facility Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Public Facility Class is used as critical-facility exposure. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 1660
+  school_facility_id:
+    variableNameInDataset: Support Facility ID
+    variableNameInArticle: School Facility Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: School Facility Identifier is used as critical-facility exposure. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: schools_preprocessed
+    observationNumber: 917
+  school_code:
+    variableNameInDataset: School Code
+    variableNameInArticle: School Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: School Code is used as critical-facility exposure. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: schools_preprocessed
+    observationNumber: 917
+  school_class:
+    variableNameInDataset: School Class
+    variableNameInArticle: School Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: School Class is used as critical-facility exposure. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: schools_preprocessed
+    observationNumber: 917
+  suspension_status:
+    variableNameInDataset: Suspension Status
+    variableNameInArticle: Suspension Status
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Suspension Status is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: schools_preprocessed
+    observationNumber: 917
+  welfare_facility_id:
+    variableNameInDataset: Support Facility ID
+    variableNameInArticle: Welfare Facility Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Welfare Facility Identifier is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: welfare_facilities_preprocessed
+    observationNumber: 4470
+  welfare_facility_major_class:
+    variableNameInDataset: Welfare Facility Major Class
+    variableNameInArticle: Welfare Facility Major Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Welfare Facility Major Class is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: welfare_facilities_preprocessed
+    observationNumber: 4470
+  welfare_facility_medium_class:
+    variableNameInDataset: Welfare Facility Medium Class
+    variableNameInArticle: Welfare Facility Medium Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Welfare Facility Medium Class is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: welfare_facilities_preprocessed
+    observationNumber: 4470
+  welfare_facility_minor_class:
+    variableNameInDataset: Welfare Facility Minor Class
+    variableNameInArticle: Welfare Facility Minor Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Welfare Facility Minor Class is used as critical-facility exposure. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: welfare_facilities_preprocessed
+    observationNumber: 4470
+  disclosure_group_code:
+    variableNameInDataset: Disclosure Group Code
+    variableNameInArticle: Disclosure Group Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Disclosure Group Code is used as identifier / reporting key. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  disclosure_group_size:
+    variableNameInDataset: Disclosure Group Size
+    variableNameInArticle: Disclosure Group Size
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Disclosure Group Size is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  total_population:
+    variableNameInDataset: Total Population
+    variableNameInArticle: Total Population
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Total Population is used as exposure / vulnerability. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  total_households:
+    variableNameInDataset: Total Households
+    variableNameInArticle: Total Households
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Total Households is used as exposure / vulnerability. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  general_households:
+    variableNameInDataset: General Households
+    variableNameInArticle: General Households
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: General Households is used as exposure / vulnerability. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  population_age_65:
+    variableNameInDataset: Population Age 65+
+    variableNameInArticle: Population Age 65+
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Population Age 65+ is used as exposure / vulnerability. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  population_age_75:
+    variableNameInDataset: Population Age 75+
+    variableNameInArticle: Population Age 75+
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Population Age 75+ is used as exposure / vulnerability. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  population_age_85:
+    variableNameInDataset: Population Age 85+
+    variableNameInArticle: Population Age 85+
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Population Age 85+ is used as exposure / vulnerability. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  one_person_households:
+    variableNameInDataset: One-Person Households
+    variableNameInArticle: One-Person Households
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: One-Person Households is used as exposure / vulnerability. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  households_with_member_age_65:
+    variableNameInDataset: Households with Member Age 65+
+    variableNameInArticle: Households with Member Age 65+
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Households with Member Age 65+ is used as exposure / vulnerability. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  older_single_person_households:
+    variableNameInDataset: Older Single-Person Households
+    variableNameInArticle: Older Single-Person Households
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Older Single-Person Households is used as exposure / vulnerability. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  older_couple_households:
+    variableNameInDataset: Older Couple Households
+    variableNameInArticle: Older Couple Households
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Older Couple Households is used as exposure / vulnerability. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  population_age_65_share:
+    variableNameInDataset: Population Age 65+ Share
+    variableNameInArticle: Population Age 65+ Share
+    variableAttribute: count
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Population Age 65+ Share is used as exposure / vulnerability. PopulationAge65Plus / TotalPopulation.
+      Selected and assigned a confirmed English readable name; surrounding whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  population_age_75_share:
+    variableNameInDataset: Population Age 75+ Share
+    variableNameInArticle: Population Age 75+ Share
+    variableAttribute: count
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Population Age 75+ Share is used as exposure / vulnerability. PopulationAge75Plus / TotalPopulation.
+      Selected and assigned a confirmed English readable name; surrounding whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  population_age_85_share:
+    variableNameInDataset: Population Age 85+ Share
+    variableNameInArticle: Population Age 85+ Share
+    variableAttribute: count
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Population Age 85+ Share is used as exposure / vulnerability. PopulationAge85Plus / TotalPopulation.
+      Selected and assigned a confirmed English readable name; surrounding whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36657
+  older_single_person_household_share:
+    variableNameInDataset: Older Single-Person Household Share
+    variableNameInArticle: Older Single-Person Household Share
+    variableAttribute: count
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Older Single-Person Household Share is used as exposure / vulnerability. OlderSinglePersonHouseholds
+      / TotalHouseholds. Selected and assigned a confirmed English readable name; surrounding whitespace stripped for text
+      fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36475
+  older_couple_household_share:
+    variableNameInDataset: Older Couple Household Share
+    variableNameInArticle: Older Couple Household Share
+    variableAttribute: count
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Older Couple Household Share is used as exposure / vulnerability. OlderCoupleHouseholds / TotalHouseholds.
+      Selected and assigned a confirmed English readable name; surrounding whitespace stripped for text fields.
+    variableSource: population_disclosure_groups_preprocessed
+    observationNumber: 36475
+  mesh_code:
+    variableNameInDataset: Mesh Code
+    variableNameInArticle: Mesh Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Mesh Code is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  disclosure_status:
+    variableNameInDataset: Disclosure Status
+    variableNameInArticle: Disclosure Status
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Disclosure Status is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  aggregation_destination_mesh_code:
+    variableNameInDataset: Aggregation Destination Mesh Code
+    variableNameInArticle: Aggregation Destination Mesh Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Aggregation Destination Mesh Code is used as identifier / reporting key. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 26288
+  aggregated_source_mesh_codes:
+    variableNameInDataset: Aggregated Source Mesh Codes
+    variableNameInArticle: Aggregated Source Mesh Codes
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Aggregated Source Mesh Codes is used as supporting explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 14667
+  geographic_level:
+    variableNameInDataset: Geographic Level
+    variableNameInArticle: Geographic Level
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Geographic Level is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 14
+  municipality:
+    variableNameInDataset: Municipality
+    variableNameInArticle: Municipality
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Municipality is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 11
+  disruption_type:
+    variableNameInDataset: Disruption Type
+    variableNameInArticle: Disruption Type
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Disruption Type is used as scenario input. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 14
+  service_status:
+    variableNameInDataset: Service Status
+    variableNameInArticle: Service Status
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Service Status is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 14
+  reported_municipality_count:
+    variableNameInDataset: Reported Municipality Count
+    variableNameInArticle: Reported Municipality Count
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Reported Municipality Count is used as identifier / reporting key. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 2
+  reported_affected_households:
+    variableNameInDataset: Reported Affected Households
+    variableNameInArticle: Reported Affected Households
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Reported Affected Households is used as exposure / vulnerability. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 2
+  reported_affected_people:
+    variableNameInDataset: Reported Affected People
+    variableNameInArticle: Reported Affected People
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Reported Affected People is used as supporting explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 2
+  observed_power_outage_customers:
+    variableNameInDataset: Observed Power Outage Customers
+    variableNameInArticle: Observed Power Outage Customers
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Observed Power Outage Customers is used as scenario input. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 2
+  observed_water_outage_households:
+    variableNameInDataset: Observed Water Outage Households
+    variableNameInArticle: Observed Water Outage Households
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Observed Water Outage Households is used as exposure / vulnerability. Source-defined value retained
+      without numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name;
+      surrounding whitespace stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 2
+  evidence_tier:
+    variableNameInDataset: Evidence Tier
+    variableNameInArticle: Evidence Tier
+    variableAttribute: ordinal
+    variableUnit: Ordinal category or rank
+    variableDescription: Evidence Tier is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 14
+  verification_status:
+    variableNameInDataset: Verification Status
+    variableNameInArticle: Verification Status
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Verification Status is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 14
+  municipality_code:
+    variableNameInDataset: Municipality Code
+    variableNameInArticle: Municipality Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Municipality Code is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 94
+  municipality_name:
+    variableNameInDataset: Municipality Name
+    variableNameInArticle: Municipality Name
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Municipality Name is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: administrative_areas_preprocessed
+    observationNumber: 49
+  ward_name:
+    variableNameInDataset: Ward Name
+    variableNameInArticle: Ward Name
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Ward Name is used as supporting explanatory. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: administrative_areas_preprocessed
+    observationNumber: 5
+  municipality_label:
+    variableNameInDataset: Municipality Label
+    variableNameInArticle: Municipality Label
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Municipality Label is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: administrative_areas_preprocessed
+    observationNumber: 49
+  emergency_road_class_code:
+    variableNameInDataset: Emergency Road Class Code
+    variableNameInArticle: Emergency Road Class Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Emergency Road Class Code is used as accessibility explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: emergency_transport_roads_preprocessed
+    observationNumber: 264
+  emergency_road_type_code:
+    variableNameInDataset: Road Type Code
+    variableNameInArticle: Emergency Road Type Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Emergency Road Type Code is used as accessibility explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: emergency_transport_roads_preprocessed
+    observationNumber: 264
+  route_id:
+    variableNameInDataset: Route ID
+    variableNameInArticle: Route Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Route Identifier is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_sections_preprocessed
+    observationNumber: 10478
+  branch_id:
+    variableNameInDataset: Branch ID
+    variableNameInArticle: Branch Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Branch Identifier is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: emergency_transport_roads_preprocessed
+    observationNumber: 264
+  emergency_road_service_status:
+    variableNameInDataset: Service Status
+    variableNameInArticle: Emergency Road Service Status
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Emergency Road Service Status is used as supporting explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: emergency_transport_roads_preprocessed
+    observationNumber: 264
+  emergency_road_class:
+    variableNameInDataset: Emergency Road Class
+    variableNameInArticle: Emergency Road Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Emergency Road Class is used as accessibility explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: emergency_transport_roads_preprocessed
+    observationNumber: 264
+  emergency_road_type:
+    variableNameInDataset: Road Type
+    variableNameInArticle: Emergency Road Type
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Emergency Road Type is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: emergency_transport_roads_preprocessed
+    observationNumber: 264
+  fire_base_name:
+    variableNameInDataset: Fire Facility Name
+    variableNameInArticle: Fire Base Name
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Fire Base Name is used as response supply. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 94
+  fire_base_type_code:
+    variableNameInDataset: Fire Facility Type Code
+    variableNameInArticle: Fire Base Type Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Fire Base Type Code is used as response supply. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 94
+  fire_base_type:
+    variableNameInDataset: Fire Facility Type
+    variableNameInArticle: Fire Base Type
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Fire Base Type is used as response supply. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 94
+  candidate_dispatch_base:
+    variableNameInDataset: Candidate Dispatch Base
+    variableNameInArticle: Candidate Dispatch Base
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Candidate Dispatch Base is used as response supply. Boolean source classification used to retain
+      eligible nominal response origins. Retain source Boolean; 81 of 94 facility records are eligible candidate dispatch
+      bases.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 94
+  hazard_type_code:
+    variableNameInDataset: Hazard Type Code
+    variableNameInArticle: Hazard Type Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Hazard Type Code is used as scenario input. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: landslide_zones_preprocessed
+    observationNumber: 56424
+  warning_zone_class_code:
+    variableNameInDataset: Warning Zone Class Code
+    variableNameInArticle: Warning Zone Class Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Warning Zone Class Code is used as scenario input. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: landslide_zones_preprocessed
+    observationNumber: 56424
+  zone_id:
+    variableNameInDataset: Zone ID
+    variableNameInArticle: Zone Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Zone Identifier is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: landslide_zones_preprocessed
+    observationNumber: 56424
+  special_warning_zone_pending_code:
+    variableNameInDataset: Special Warning Zone Pending Code
+    variableNameInArticle: Special Warning Zone Pending Code
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Special Warning Zone Pending Code is used as scenario input. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: landslide_zones_preprocessed
+    observationNumber: 56424
+  hazard_type:
+    variableNameInDataset: Hazard Type
+    variableNameInArticle: Hazard Type
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Hazard Type is used as scenario input. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: landslide_zones_preprocessed
+    observationNumber: 56424
+  warning_zone_class:
+    variableNameInDataset: Warning Zone Class
+    variableNameInArticle: Warning Zone Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Warning Zone Class is used as scenario input. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: landslide_zones_preprocessed
+    observationNumber: 54499
+  special_warning_zone_pending:
+    variableNameInDataset: Special Warning Zone Pending
+    variableNameInArticle: Special Warning Zone Pending
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Special Warning Zone Pending is used as scenario input. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: landslide_zones_preprocessed
+    observationNumber: 56424
+  road_centerline_type_code:
+    variableNameInDataset: Road Centerline Type Code
+    variableNameInArticle: Road Centerline Type Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Road Centerline Type Code is used as accessibility explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: road_centerlines_preprocessed
+    observationNumber: 430201
+  road_category_code:
+    variableNameInDataset: Road Category Code
+    variableNameInArticle: Road Category Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Road Category Code is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_centerlines_preprocessed
+    observationNumber: 430201
+  road_state_code:
+    variableNameInDataset: Road State Code
+    variableNameInArticle: Road State Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Road State Code is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_centerlines_preprocessed
+    observationNumber: 430201
+  vertical_level:
+    variableNameInDataset: Vertical Level
+    variableNameInArticle: Vertical Level
+    variableAttribute: ordinal
+    variableUnit: Ordinal category or rank
+    variableDescription: Vertical Level is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  width_category_code:
+    variableNameInDataset: Width Category Code
+    variableNameInArticle: Width Category Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Width Category Code is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_centerlines_preprocessed
+    observationNumber: 430201
+  road_centerline_type:
+    variableNameInDataset: Road Centerline Type
+    variableNameInArticle: Road Centerline Type
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Road Centerline Type is used as accessibility explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: road_centerlines_preprocessed
+    observationNumber: 430201
+  road_category:
+    variableNameInDataset: Road Category
+    variableNameInArticle: Road Category
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Road Category is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  road_state:
+    variableNameInDataset: Road State
+    variableNameInArticle: Road State
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Road State is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  width_category:
+    variableNameInDataset: Width Category
+    variableNameInArticle: Width Category
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Width Category is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  fire_prevention_area_type:
+    variableNameInDataset: Fire Prevention Area Type
+    variableNameInArticle: Fire Prevention Area Type
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Fire Prevention Area Type is used as supporting explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: mlit_fire_prevention_zones_preprocessed
+    observationNumber: 14
+  fire_prevention_area_code:
+    variableNameInDataset: Fire Prevention Area Code
+    variableNameInArticle: Fire Prevention Area Code
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Fire Prevention Area Code is used as identifier / reporting key. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: mlit_fire_prevention_zones_preprocessed
+    observationNumber: 14
+  land_use_zone_name:
+    variableNameInDataset: Land Use Zone Name
+    variableNameInArticle: Land Use Zone Name
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Land Use Zone Name is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: mlit_land_use_zones_preprocessed
+    observationNumber: 1255
+  land_use_zone_code:
+    variableNameInDataset: Land Use Zone Code
+    variableNameInArticle: Land Use Zone Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Land Use Zone Code is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: mlit_land_use_zones_preprocessed
+    observationNumber: 1255
+  floor_area_ratio:
+    variableNameInDataset: Floor Area Ratio
+    variableNameInArticle: Floor Area Ratio
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Floor Area Ratio is used as supporting explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: mlit_land_use_zones_preprocessed
+    observationNumber: 1255
+  permitted_building_coverage_ratio:
+    variableNameInDataset: Permitted Building Coverage Ratio
+    variableNameInArticle: Permitted Building Coverage Ratio
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Permitted Building Coverage Ratio is used as spread explanatory. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: mlit_land_use_zones_preprocessed
+    observationNumber: 1255
+  park_type:
+    variableNameInDataset: Park Type
+    variableNameInArticle: Park Type
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Park Type is used as supporting explanatory. Source-defined value retained without numerical transformation
+      or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace stripped
+      for text fields.
+    variableSource: mlit_urban_parks_preprocessed
+    observationNumber: 709
+  park_code:
+    variableNameInDataset: Park Code
+    variableNameInArticle: Park Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Park Code is used as identifier / reporting key. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: mlit_urban_parks_preprocessed
+    observationNumber: 709
+  planned_road_type:
+    variableNameInDataset: Planned Road Type
+    variableNameInArticle: Planned Road Type
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Planned Road Type is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: mlit_planned_roads_preprocessed
+    observationNumber: 1732
+  planned_road_code:
+    variableNameInDataset: Planned Road Code
+    variableNameInArticle: Planned Road Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Planned Road Code is used as accessibility explanatory. Source-defined value retained without numerical
+      transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding whitespace
+      stripped for text fields.
+    variableSource: mlit_planned_roads_preprocessed
+    observationNumber: 1732
+  urban_land_use_mesh_code:
+    variableNameInDataset: Urban Land Use Mesh Code
+    variableNameInArticle: Urban Land Use Mesh Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Urban Land Use Mesh Code is used as identifier / reporting key. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: mlit_urban_land_use_100m_preprocessed
+    observationNumber: 371094
+  urban_land_use_code:
+    variableNameInDataset: Urban Land Use Code
+    variableNameInArticle: Urban Land Use Code
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Urban Land Use Code is used as identifier / reporting key. Source-defined value retained without
+      numerical transformation or missing-value imputation. Selected and assigned a confirmed English readable name; surrounding
+      whitespace stripped for text fields.
+    variableSource: mlit_urban_land_use_100m_preprocessed
+    observationNumber: 371094
+  road_section_id:
+    variableNameInDataset: Road Section ID
+    variableNameInArticle: Junction-to-Junction Road Section Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Junction-to-Junction Road Section Identifier is used as accessibility and intervention unit. Unique
+      identifier for one maximal continuous same-level road chain between true junctions. Transferred into the project as
+      a read-only upstream-derived attribute and validated against every retained routable edge.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  road_section_length_m:
+    variableNameInDataset: Road Section Length (m)
+    variableNameInArticle: Junction-to-Junction Road Section Length
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Junction-to-Junction Road Section Length is used as failure exposure and cost proxy. Total routed
+      length over all internal edges assigned to one Road Section ID. Summed from Road Length (m) within each Road Section
+      ID; edge-to-section length equality and upper-tail quantiles were validated.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  road_edge_count:
+    variableNameInDataset: Road Edge Count
+    variableNameInArticle: Internal Routable Edge Count per Road Section
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Internal Routable Edge Count per Road Section is used as topology diagnostic. Number of internal
+      routable edges assigned to one Road Section ID. Counted within Road Section ID and validated against the section table.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  route_name:
+    variableNameInDataset: Route Name
+    variableNameInArticle: Human-Readable Road Route Name
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Human-Readable Road Route Name is used as accessibility descriptor. Route name attached to a routable
+      edge or road section when source matching is available. Retained after whitespace stripping; unmatched route names remain
+      missing and are not imputed.
+    variableSource: road_sections_preprocessed
+    observationNumber: 10478
+  road_failure_model:
+    variableNameInDataset: Road Failure Model
+    variableNameInArticle: Declared Road-Section Failure Mechanism
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Declared Road-Section Failure Mechanism is used as robustness scenario input. Named mechanism used
+      to generate a stochastic road state. Length-Dependent Independent is finalized for the calibrated input table; Spatially
+      Clustered and Hazard-Weighted remain analysis-stage alternatives.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 1719220
+  expected_failed_road_length_share:
+    variableNameInDataset: Expected Failed Road Length Share
+    variableNameInArticle: Target Expected Unavailable Road-Length Share
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Target Expected Unavailable Road-Length Share is used as robustness severity input. Target share
+      d of total eligible Road Section Length (m) expected to be unavailable under a declared failure model. Finalized levels
+      are 0.5%, 1%, 3%, 5%, and 10%; the first is a near-baseline check and the last is a stress case.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 1719220
+  failure_intensity_per_metre:
+    variableNameInDataset: Failure Intensity per Metre
+    variableNameInArticle: Calibrated Road Failure Intensity per Metre
+    variableAttribute: continuous
+    variableUnit: Per metre
+    variableDescription: Calibrated Road Failure Intensity per Metre is used as robustness parameter. Positive parameter \lambda_d
+      calibrated so length-weighted expected section closure equals severity d. Numerically calibrated over all 343,844 eligible
+      positive-length road sections for each finalized severity.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 1719220
+  section_failure_probability:
+    variableNameInDataset: Section Failure Probability
+    variableNameInArticle: Scenario-Specific Road-Section Failure Probability
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Scenario-Specific Road-Section Failure Probability is used as robustness scenario input. q_s(\lambda_d)=1-\exp(-\lambda_d
+      L_s), where L_s is Road Section Length (m). Constructed for each Road Section ID and finalized severity under the Length-Dependent
+      Independent mechanism; it is not an engineering or observed-event probability.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 1719220
+  road_section_failure_indicator:
+    variableNameInDataset: Road Section Failure Indicator
+    variableNameInArticle: Replicate-Specific Road-Section Closure Indicator
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Replicate-Specific Road-Section Closure Indicator is used as robustness treatment. Z_{srd}=\mathbf{1}[U_{sr}<q_s(\lambda_d)]
+      for road section s, replicate r, and severity d. Generated from deterministic seeds; shared scores preserve nested severity
+      states within replicate.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 343844
+  simulation_replicate:
+    variableNameInDataset: Simulation Replicate
+    variableNameInArticle: Stochastic Road-State Replicate Identifier
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Stochastic Road-State Replicate Identifier is used as robustness identifier. Integer index for one
+      reproducible stochastic road-state draw. Generated with deterministic seeds and retained at declared convergence checkpoints.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 343844
+  realized_failed_road_length_share:
+    variableNameInDataset: Realized Failed Road Length Share
+    variableNameInArticle: Realized Unavailable Road-Length Share
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Realized Unavailable Road-Length Share is used as robustness diagnostic. Total Road Section Length
+      (m) over failed sections divided by total eligible section length in one replicate. Calculated for every retained stochastic
+      state and compared with the target severity.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 1000
+  timely_response_probability:
+    variableNameInDataset: Timely Response Probability
+    variableNameInArticle: Probability of Nominal Fire-Service Response within Threshold
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Probability of Nominal Fire-Service Response within Threshold is used as accessibility reliability
+      outcome. Monte Carlo mean of the indicator that minimum fire-service response time does not exceed a declared threshold.
+      Estimated separately by Road Failure Model, Expected Failed Road Length Share, and response threshold.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 62945
+  p90_response_time_min:
+    variableNameInDataset: P90 Response Time (min)
+    variableNameInArticle: Ninetieth-Percentile Nominal Fire-Service Response Time
+    variableAttribute: continuous
+    variableUnit: Minutes
+    variableDescription: Ninetieth-Percentile Nominal Fire-Service Response Time is used as accessibility reliability outcome.
+      Empirical 90th percentile of minimum response time across stochastic road states; grids with at least 10% disconnection
+      are reported as unreachable for the unconditional percentile, and connected-only summaries must be labelled explicitly.
+      Estimated from retained stochastic states; it is not an observed response-time percentile.
+    variableSource: road_section_failure_probabilities_preprocessed
+    observationNumber: 62945
+  event_exposed_road_length_m:
+    variableNameInDataset: Event-Exposed Road Length (m)
+    variableNameInArticle: Event-Hazard-Exposed Length within Road Section
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Event-Hazard-Exposed Length within Road Section is used as intervention exposure. Sum of internal
+      Road Length (m) assigned to Warning Zone or Special Warning Zone exposure classes within one Road Section ID. Constructed
+      from edge-level event exposure and set to zero where no internal edge is event-exposed.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  event_exposed_road_length_share:
+    variableNameInDataset: Event-Exposed Road Length Share
+    variableNameInArticle: Share of Road Section Length with Event-Hazard Exposure
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Share of Road Section Length with Event-Hazard Exposure is used as intervention diagnostic. Event-Exposed
+      Road Length (m) divided by Road Section Length (m). Constructed without imputation; values are bounded from zero to
+      one.
+    variableSource: road_sections_preprocessed
+    observationNumber: 343844
+  road_restoration_cost_proxy:
+    variableNameInDataset: Road Restoration Cost Proxy
+    variableNameInArticle: Relative Road-Section Restoration Resource Requirement
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Relative Road-Section Restoration Resource Requirement is used as intervention cost proxy. Event-Exposed
+      Road Length (m) divided by the median positive event-exposed road-section length. Constructed only for the 42,068 event-exposed
+      sections; unaffected sections remain missing because observed repair duration and monetary cost are unavailable.
+    variableSource: road_section_intervention_preprocessed
+    observationNumber: 42068
+  building_count:
+    variableNameInDataset: Building Count
+    variableNameInArticle: Building Count per Analysis Cell
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Building Count per Analysis Cell is used as spread explanatory. N_j = \sum_b 1(p_b \in j), where
+      p_b is the building point-on-surface. Building footprints are projected to EPSG:6670 and assigned to one populated 125
+      m cell by point-on-surface location.
+    variableSource: buildings_preprocessed
+    observationNumber: 62945
+  observed_building_footprint_coverage_ratio:
+    variableNameInDataset: Observed Building Footprint Coverage Ratio
+    variableNameInArticle: Observed Building Footprint Coverage Ratio
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Observed Building Footprint Coverage Ratio is used as spread explanatory. BCR_j = \min\{1, \sum_b
+      Area(b \cap j) / Area(j)\}. Exact footprint-cell intersections are calculated in EPSG:6670 and divided by cell area.
+    variableSource: buildings_preprocessed
+    observationNumber: 62945
+  mean_building_separation_m:
+    variableNameInDataset: Mean Building Separation (m)
+    variableNameInArticle: Mean Nearest-Building Boundary Separation
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Mean Nearest-Building Boundary Separation is used as spread explanatory. D_j = N_{j,valid}^{-1}\sum_{b:p_b\in
+      j}\min_{k\ne b} dist(\partial b,\partial k) for buildings with a valid nearest neighbour. Nearest building-boundary
+      distances are calculated prefecture-wide in EPSG:6670, so the nearest neighbour may lie across a cell boundary.
+    variableSource: buildings_preprocessed
+    observationNumber: 62945
+  built_continuity_index:
+    variableNameInDataset: Built Continuity Index
+    variableNameInArticle: Local Built-Form Continuity Index
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Local Built-Form Continuity Index is used as spread explanatory. K_j = N_{j,\leq 6m}/N_{j,valid},
+      the share of assigned buildings whose nearest building boundary is no more than 6 m away. Constructed from the same
+      prefecture-wide nearest-neighbour search; cells without a valid pair are set to zero.
+    variableSource: buildings_preprocessed
+    observationNumber: 62945
+  firebreak_share:
+    variableNameInDataset: Firebreak Share
+    variableNameInArticle: Mapped Road-Corridor and Open-Land Firebreak Share
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: 'Mapped Road-Corridor and Open-Land Firebreak Share is used as spread protective. F_j = \min\{1,(A_j^{road}+A_j^{open})/Area(j)\}.
+      Road centreline length is converted to corridor area using width-class values of 2, 4.25, 9.25, 16.25, or 22 m (unknown:
+      4 m); mapped open-land codes 0902, 1002, 1003, 1100, 1400, and 1500 are added by exact overlap.'
+    variableSource: buildings_preprocessed
+    observationNumber: 62945
+  conditional_spread_susceptibility:
+    variableNameInDataset: Conditional Spread Susceptibility
+    variableNameInArticle: Conditional Fire-Spread Susceptibility
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Conditional Fire-Spread Susceptibility is used as intermediate outcome. S_j=[R(BCR_j)+R(K_j)+1-R(D_j)+1-R(F_j)]/4,
+      where R is the empirical percentile transform. Equal-weight grid screening score conditional on imposed ignition; cells
+      with fewer than two buildings receive zero continuity rank, missing inverse-separation values are set to zero, and the
+      score is not an ignition probability.
+    variableSource: buildings_preprocessed
+    observationNumber: 62945
+  normal_response_time_min:
+    variableNameInDataset: Normal Response Time (min)
+    variableNameInArticle: Normal-Scenario Minimum Fire-Service Travel Time
+    variableAttribute: continuous
+    variableUnit: Minutes
+    variableDescription: Normal-Scenario Minimum Fire-Service Travel Time is used as accessibility outcome. T_j^0 = \min_{i
+      \in N} t_{ij}^0, capped at 30 min when nominal service is unmet. Shortest-path time from the 81 eligible candidate dispatch
+      bases on the explicitly augmented normal road graph.
+    variableSource: routable_road_edges_sectioned_preprocessed
+    observationNumber: 62945
+  disrupted_response_time_min:
+    variableNameInDataset: Disrupted Response Time (min)
+    variableNameInArticle: Disruption-Scenario Minimum Fire-Service Travel Time
+    variableAttribute: continuous
+    variableUnit: Minutes
+    variableDescription: Disruption-Scenario Minimum Fire-Service Travel Time is used as accessibility outcome. T_j(\omega)
+      = \min_{i \in N(\omega)} t_{ij}(\omega), capped at 30 min when nominal service is unmet. Shortest-path time on the declared
+      event-specific or stochastic road state after applying its link-availability rule.
+    variableSource: routable_road_edges_sectioned_preprocessed
+    observationNumber: 62945
+  backup_fire_base_count:
+    variableNameInDataset: Backup Fire Base Count
+    variableNameInArticle: Number of Alternative Candidate Dispatch Bases
+    variableAttribute: count
+    variableUnit: Count
+    variableDescription: Number of Alternative Candidate Dispatch Bases is used as accessibility redundancy. B_j(\omega)=\max\{0,\sum_i1[t_{ij}(\omega)\leq10]-1\}.
+      Count of candidate bases beyond the nearest base that can reach the cell within the declared 10-minute threshold.
+    variableSource: routable_road_edges_sectioned_preprocessed
+    observationNumber: 62945
+  single_route_dependence:
+    variableNameInDataset: Single Route Dependence
+    variableNameInArticle: Shared Shortest-Route Dependence
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Shared Shortest-Route Dependence is used as accessibility vulnerability. For one qualifying base
+      the value is 1; for multiple qualifying bases it is the largest number of their selected shortest paths sharing one
+      road edge divided by the qualifying-base count. Calculated on the event-specific graph for bases within 10 min; endpoint
+      connector edges are excluded and cells without a qualifying route remain missing.
+    variableSource: routable_road_edges_sectioned_preprocessed
+    observationNumber: 62945
+  water_constraint_scenario:
+    variableNameInDataset: Water Constraint Scenario
+    variableNameInArticle: Bounded Firefighting Water-Availability Scenario
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: 'Bounded Firefighting Water-Availability Scenario is used as scenario input. Two-category boundary
+      condition: Normal-reliance boundary or Bounded water-unavailable stress. The stress category is assigned to cell centroids
+      within Kumamoto Minami Ward; it is a scenario boundary and not observed hydrant or network failure.'
+    variableSource: service_disruptions_preprocessed
+    observationNumber: 62945
+  conditional_fire_consequence:
+    variableNameInDataset: Conditional Fire Consequence
+    variableNameInArticle: Weighted Conditional Fire Consequence
+    variableAttribute: continuous
+    variableUnit: Modelled score units
+    variableDescription: Weighted Conditional Fire Consequence is used as main outcome. C_j^{(o)}=S_jE_j^{(o)}(1+A_j+W_j);
+      the base consequence layer sets W_j=0, while the combined intervention stress sets W_j=1 inside the bounded water-stress
+      area. Exposure E_j^{(o)} is defined separately for population, older population, and critical facilities; A_j is the
+      accessibility penalty. The result is conditional on ignition, not a calibrated building-fire probability.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 62945
+  leave_one_out_fire_base_value:
+    variableNameInDataset: Leave-One-Out Fire Base Value
+    variableNameInArticle: Leave-One-Out Candidate Dispatch-Base Criticality
+    variableAttribute: continuous
+    variableUnit: Unitless
+    variableDescription: Leave-One-Out Candidate Dispatch-Base Criticality is used as station criticality outcome. L_i^{(o)}(\omega)
+      = J^{(o)}(N \setminus \{i\}, \omega) - J^{(o)}(N, \omega). Deterministic increase in modelled system loss after removing
+      one eligible base from the full represented system under one scenario and exposure objective.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 486
+  leave_one_out_fire_base_value_share:
+    variableNameInDataset: Leave-One-Out Fire Base Value Share
+    variableNameInArticle: Scenario-Normalized Leave-One-Out Fire-Base Criticality Share
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Scenario-Normalized Leave-One-Out Fire-Base Criticality Share is used as station criticality outcome.
+      l_i^{(o)}(\omega)=L_i^{(o)}(\omega)/\sum_{k \in N}L_k^{(o)}(\omega) when the denominator is positive. Used only for
+      within-scenario comparison across eligible bases; zero-total-loss scenarios remain unidentified.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 486
+  road_scenario_leave_one_out_iqr:
+    variableNameInDataset: Road-Scenario Leave-One-Out IQR
+    variableNameInArticle: Across-Scenario Leave-One-Out Criticality Interquartile Range
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Across-Scenario Leave-One-Out Criticality Interquartile Range is used as station criticality robustness.
+      Interquartile range of Leave-One-Out Fire Base Value Share across the declared road states for one base and exposure
+      objective. Reported as instability rather than subtracted from the central estimate; no universal composite station
+      score is constructed.
+    variableSource: fire_dispatch_bases_preprocessed
+    observationNumber: 486
+  intervention_benefit:
+    variableNameInDataset: Intervention Benefit
+    variableNameInArticle: Weighted Conditional-Consequence Reduction from Intervention
+    variableAttribute: continuous
+    variableUnit: Modelled score units
+    variableDescription: Weighted Conditional-Consequence Reduction from Intervention is used as decision outcome. Benefit_a(\omega)
+      = J_0(\omega) - J_a(\omega). Constructed from the same event-specific baseline and post-action loss calculation; prioritized
+      and simple-baseline results are compared within each action class and declared budget definition.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 40
+  retained_protection_gain_share:
+    variableNameInDataset: Retained Protection Gain Share
+    variableNameInArticle: Fixed-Plan Retained Intervention-Benefit Share
+    variableAttribute: continuous
+    variableUnit: Proportion from 0 to 1
+    variableDescription: Fixed-Plan Retained Intervention-Benefit Share is used as intervention robustness outcome. R_{\mathcal{A}}^{(o)}(\omega_r)=Benefit_{\mathcal{A}}^{(o)}(\omega_r)/Benefit_{\mathcal{A}}^{(o)}(\omega_{event})
+      when the event-specific denominator is positive. Select the road-restoration bundle under the event-specific road case,
+      evaluate the same bundle unchanged across each predeclared 3% stochastic road state, and retain the ratio without clipping.
+    variableSource: population_mesh_125m_preprocessed
+    observationNumber: 600
+  candidate_staging_site_id:
+    variableNameInDataset: Candidate Staging Site ID
+    variableNameInArticle: Traceable Candidate Staging-Site Identifier
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Traceable Candidate Staging-Site Identifier is used as intervention identifier. Stable source-prefixed
+      identifier for one mapped candidate site. Retain the source facility identifier; use a geometry-derived stable identifier
+      for an urban park without a suitable source identifier.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+  candidate_staging_site_type:
+    variableNameInDataset: Candidate Staging Site Type
+    variableNameInArticle: Candidate Staging-Site Facility Class
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Candidate Staging-Site Facility Class is used as intervention explanatory. Categorical source class
+      of the mapped candidate site. Classify as Emergency evacuation site, Designated shelter, Public facility, School, or
+      Urban park.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+  candidate_staging_site_name:
+    variableNameInDataset: Candidate Staging Site Name
+    variableNameInArticle: Source-Reported Candidate Staging-Site Name
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Source-Reported Candidate Staging-Site Name is used as intervention descriptor. Source-reported name
+      of the mapped candidate site. Retain the source name without translation or imputation; every selected site requires
+      field verification.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+  candidate_source_status:
+    variableNameInDataset: Candidate Source Status
+    variableNameInArticle: Candidate Staging-Site Source Status
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Candidate Staging-Site Source Status is used as supporting descriptor. Source-reported designation,
+      classification, or status retained for candidate screening and audit. Retain the available source value without harmonizing
+      it into an operational-readiness measure.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+  access_mesh_code:
+    variableNameInDataset: Access Mesh Code
+    variableNameInArticle: Staging-Site Routing Access Mesh
+    variableAttribute: categorical
+    variableUnit: Unitless category
+    variableDescription: Staging-Site Routing Access Mesh is used as routing key. Identifier of the nearest populated demand
+      mesh used to connect a candidate site to the road graph. Match in EPSG:6670 within 250 m; the matched mesh must have
+      an accepted network connector and a node in the central event graph.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+  staging_to_mesh_distance_m:
+    variableNameInDataset: Staging-to-Mesh Distance (m)
+    variableNameInArticle: Candidate-Site to Access-Mesh Distance
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Candidate-Site to Access-Mesh Distance is used as routing diagnostic. Euclidean distance from the
+      mapped candidate point to its matched Access Mesh Code in EPSG:6670. Retain only matches no greater than 250 m and report
+      the distance without imputation.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+  staging_access_network_snap_distance_m:
+    variableNameInDataset: Staging Access Network Snap Distance (m)
+    variableNameInArticle: Access-Mesh to Road-Network Snap Distance
+    variableAttribute: continuous
+    variableUnit: Metres
+    variableDescription: Access-Mesh to Road-Network Snap Distance is used as routing diagnostic. Accepted road-network connector
+      distance carried from the matched Access Mesh Code. Use the validated demand-mesh connector; this is not a measured
+      driveway or direct facility-access distance.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+  field_verification_required:
+    variableNameInDataset: Field Verification Required
+    variableNameInArticle: Candidate Staging-Site Field-Verification Flag
+    variableAttribute: boolean
+    variableUnit: Boolean indicator
+    variableDescription: Candidate Staging-Site Field-Verification Flag is used as interpretation boundary. Boolean flag that
+      is true for every selected candidate staging site. Indicates that parking, turning space, site safety, capacity, permission,
+      fuel, communications, and staffing have not been operationally verified.
+    variableSource: public_facilities_preprocessed
+    observationNumber: 18
+tableDictionary:
+  table_scenario_definitions_and_interpretation_boundaries:
+    tableId: table_scenario_definitions_and_interpretation_boundaries
+    tablePath: data/results/tables/Table_scenario_definitions_and_interpretation_boundaries.xlsx
+    tableCaption: Scenario definitions and interpretation boundaries
+    tableAim: 'Main: the common ignition-conditioned analysis, event-specific road disruption, stochastic road-section failure,
+      water-availability, one-fire-base-removal, and intervention assumptions, analytical purposes, and interpretation boundaries.'
+    tableExplanation: Symbols summarize each scenario's road, water, base-availability, and intervention assumptions; the
+      final row explains the symbols and percentage inputs.
+    tableSuitableSection: Methods
+  table_municipality_fire_consequence_and_accessibility_summary:
+    tableId: table_municipality_fire_consequence_and_accessibility_summary
+    tablePath: data/results/tables/Table_municipality_fire_consequence_and_accessibility_summary.xlsx
+    tableCaption: Municipality fire consequence and accessibility summary
+    tableAim: 'Main: municipality-level differences in exposed population, older-population share, accessibility degradation,
+      response redundancy, and aggregate conditional fire consequence.'
+    tableExplanation: All 49 reporting units are compared on exposure, older-population share, added response delay, redundancy,
+      and conditional consequence.
+    tableSuitableSection: Results
+  table_priority_critical_facilities:
+    tableId: table_priority_critical_facilities
+    tablePath: data/results/tables/Table_priority_critical_facilities.xlsx
+    tableCaption: Priority critical-facility screening summary
+    tableAim: 'Main: a compact, balanced screening summary of hospitals, welfare facilities, schools, shelters, and evacuation
+      sites in cells with high conditional consequence or weak post-earthquake fire-service accessibility; public-facing facility
+      names and identifiers are intentionally omitted.'
+    tableExplanation: Twenty anonymized records balance five facility classes and report municipality, mesh, consequence,
+      response time, and backup coverage without facility identifiers.
+    tableSuitableSection: Results
+  table_fire_base_leave_one_out_criticality:
+    tableId: table_fire_base_leave_one_out_criticality
+    tablePath: data/results/tables/Table_fire_base_leave_one_out_criticality.xlsx
+    tableCaption: Fire-base leave-one-out criticality
+    tableAim: 'Main: the 20 eligible candidate dispatch bases with the largest event-road population-objective leave-one-out
+      loss, with normal-road comparison and across-road instability; complete results for all 81 bases remain in derived data.'
+    tableExplanation: The 20 highest event-road bases are ranked by added system loss after individual removal, with normal-road
+      comparison and instability measures.
+    tableSuitableSection: Results
+  table_intervention_performance_by_budget:
+    tableId: table_intervention_performance_by_budget
+    tablePath: data/results/tables/Table_intervention_performance_by_budget.xlsx
+    tableCaption: Intervention performance by budget
+    tableAim: 'Main: paired performance of prioritized and population-baseline candidate staging-site selection, bounded water
+      support, and road-section restoration at representative unit-count and length-aware cost-proxy budgets.'
+    tableExplanation: Twelve paired rows compare prioritized and simple-baseline strategies for staging, water support, and
+      road restoration under declared budgets.
+    tableSuitableSection: Results
+  table_highest_priority_125_m_cells:
+    tableId: table_highest_priority_125_m_cells
+    tablePath: data/results/tables/Table_highest_priority_125_m_cells.xlsx
+    tableCaption: Highest-priority 125 m cells
+    tableAim: 'Supplementary: the complete cell-level list supporting priority verification, patrol, access protection, or
+      resource pre-positioning; the main text reports only its geographic concentration and principal capability gaps.'
+    tableExplanation: Fifty cells document the locations, exposure, susceptibility, accessibility, and conditional-consequence
+      measures underlying the priority screen.
+    tableSuitableSection: Supplementary materials
+  table_robustness_and_sensitivity_summary:
+    tableId: table_robustness_and_sensitivity_summary
+    tablePath: data/results/tables/Table_robustness_and_sensitivity_summary.xlsx
+    tableCaption: Robustness and sensitivity summary
+    tableAim: 'Supplementary: exact nonredundant values supporting road-response reliability, multi-state leave-one-out fire-base
+      stability, fixed-plan road-restoration benefit distributions, built-form/consequence sensitivity, and the final reliability-convergence
+      checkpoint.'
+    tableExplanation: Twenty compact rows report reliability, convergence, ranking stability, component deletion, accessibility
+      multipliers, and retained intervention gains.
+    tableSuitableSection: Supplementary materials
+figureDictionary:
+  fig_integrated_fire_consequence_and_response_system_dependence_framework:
+    figureId: fig_integrated_fire_consequence_and_response_system_dependence_framework
+    figurePath: data/results/figures/Figure_integrated_fire_consequence_and_response_system_dependence_framework.png
+    figureCaption: Integrated fire consequence and response-system dependence framework
+    figureAim: 'Main: the complete analytical chain from built form, post-earthquake accessibility, water constraints, and
+      exposure through conditional consequence, leave-one-fire-base-out system dependence, and intervention benefit.'
+    figureExplanation: Four input domains feed a conditional-consequence screen, then support fire-base dependence and intervention
+      decisions.
+    figureSuitableSection: Conceptual framework
+  fig_conditional_fire_consequence_and_vulnerable_exposure:
+    figureId: fig_conditional_fire_consequence_and_vulnerable_exposure
+    figurePath: data/results/figures/Figure_conditional_fire_consequence_and_vulnerable_exposure.png
+    figureCaption: Conditional fire consequence and vulnerable exposure
+    figureAim: 'Main: where population and essential services overlap with conditional spread susceptibility and constrained
+      response to create the greatest conditional consequences.'
+    figureExplanation: Two aligned maps show where population and critical services coincide with high susceptibility and
+      constrained response.
+    figureSuitableSection: Results
+  fig_post_earthquake_fire_service_accessibility:
+    figureId: fig_post_earthquake_fire_service_accessibility
+    figurePath: data/results/figures/Figure_post_earthquake_fire_service_accessibility.png
+    figureCaption: Post-earthquake fire-service accessibility
+    figureAim: 'Main: how event-specific disruption and additional road-section uncertainty change response time, 10-minute
+      backup coverage, and reliable timely arrival.'
+    figureExplanation: Four maps compare normal travel time, event-added delay, loss of backup coverage, and reliable timely
+      arrival.
+    figureSuitableSection: Results
+  fig_fire_base_accessibility_dependence_under_road_disruption:
+    figureId: fig_fire_base_accessibility_dependence_under_road_disruption
+    figurePath: data/results/figures/Figure_fire_base_accessibility_dependence_under_road_disruption.png
+    figureCaption: Fire-base dependence under road disruption
+    figureAim: 'Main: how much modelled system loss increases when each eligible fire base is removed from the full response
+      system, and how that dependence changes between normal and event-specific roads.'
+    figureExplanation: The map locates high-dependence bases, while ranked comparisons show how one-base removal changes system
+      loss across road conditions.
+    figureSuitableSection: Results
+  fig_intervention_priorities_and_protection_gains:
+    figureId: fig_intervention_priorities_and_protection_gains
+    figurePath: data/results/figures/Figure_intervention_priorities_and_protection_gains.png
+    figureCaption: Intervention priorities and protection gains
+    figureAim: 'Main: where traceable candidate staging-site selection, bounded water support, and junction-to-junction road-section
+      restoration reduce weighted conditional consequence under the event-specific scenario, and how road priorities change
+      between section-count and length-aware cost-proxy budgets.'
+    figureExplanation: Maps, bars, and budget curves identify staging, water-support, and road-restoration priorities and
+      their modelled consequence reductions.
+    figureSuitableSection: Results
+  fig_conditional_fire_susceptibility_across_kumamoto:
+    figureId: fig_conditional_fire_susceptibility_across_kumamoto
+    figurePath: data/results/figures/Figure_conditional_fire_susceptibility_across_kumamoto.png
+    figureCaption: Conditional fire susceptibility across Kumamoto
+    figureAim: 'Supplementary: how building coverage, built continuity, and mapped firebreak conditions combine into the conditional
+      spread-susceptibility screen.'
+    figureExplanation: Three maps show building coverage, built continuity and firebreak conditions, and their combined ignition-conditioned
+      susceptibility screen.
+    figureSuitableSection: Supplementary materials
+  fig_scenario_and_parameter_robustness:
+    figureId: fig_scenario_and_parameter_robustness
+    figurePath: data/results/figures/Figure_scenario_and_parameter_robustness.png
+    figureCaption: Scenario and parameter robustness
+    figureAim: 'Supplementary: whether alternative road-section failure mechanisms change response reliability, high-criticality
+      fire-base membership under the leave-one-out estimand, or the retained benefit of fixed event-specific road-restoration
+      plans across 100 states per mechanism.'
+    figureExplanation: Panels compare road-response reliability, fire-base priority retention, and fixed-plan road-restoration
+      gains across declared stress mechanisms.
+    figureSuitableSection: Supplementary materials
+analysisStructureBrief:
+  overview: Eight linked analytical levels move from declared earthquake-response scenarios through grid screening and network
+    reliability to fire-base dependence, interventions, and stress testing. All results are conditional planning screens rather
+    than ignition forecasts, causal effects, or real-time operational-capacity estimates.
+  levels:
+  - levelName: Scenario and evidence contract
+    levelAim: Separate observed event context from imposed road, water, ignition, base-removal, and intervention scenarios.
+    inputs:
+    - Disruption Type
+    - Service Status
+    - Emergency Road Service Status
+    - Water Constraint Scenario
+    - Candidate Dispatch Base
+    - Verification Status
+    modelOrMethod: Use baseline-versus-scenario contrasts with ignition imposed. Event-specific road rules, bounded water
+      stress, one-base removal, and stochastic road states are declared separately; no occurrence probability is assigned
+      to the 2026 event.
+    outputs:
+    - Integrated Fire Consequence and Response-System Dependence Framework
+    - Scenario Definitions and Interpretation Boundaries
+    interpretation: Observed reports define context, while unobserved passability, hydrant status, and operational readiness
+      remain assumptions or field-verification requirements.
+  - levelName: Built-form susceptibility
+    levelAim: Rank populated 125 m cells by mapped conditions that could support spread after an imposed ignition.
+    inputs:
+    - Observed Building Footprint Coverage Ratio
+    - Mean Building Separation (m)
+    - Built Continuity Index
+    - Firebreak Share
+    - Permitted Building Coverage Ratio
+    modelOrMethod: Compute S_j = [R(BCR_j) + R(K_j) + 1 - R(D_j) + 1 - R(F_j)] / 4, where R is the empirical percentile transform.
+      Permitted Building Coverage Ratio is contextual only.
+    outputs:
+    - Conditional Fire Susceptibility across Kumamoto
+    - Highest-Priority 125 m Cells
+    - Robustness and Sensitivity Summary
+    interpretation: Higher observed coverage and continuity and lower separation and firebreak share raise the score. It is
+      neither ignition probability nor a building-level propagation forecast.
+  - levelName: Accessibility and redundancy
+    levelAim: Measure how event-specific road disruption changes nominal response time and backup coverage.
+    inputs:
+    - Road Category
+    - Width Category
+    - Road State
+    - Emergency Road Service Status
+    - Hazard Type
+    - Candidate Dispatch Base
+    modelOrMethod: For cell j, T_j(omega) = min over eligible bases i of shortest-path travel time t_ij(omega), capped at
+      30 minutes when nominal service is unmet. Backup Fire Base Count records additional bases within 10 minutes, and shared
+      shortest routes define Single Route Dependence.
+    outputs:
+    - Post-Earthquake Fire-Service Accessibility
+    - Municipality Fire Consequence and Accessibility Summary
+    interpretation: Road attributes determine assumed speeds and declared removals determine rerouting. Results are nominal
+      accessibility, not observed dispatch time, staffing, vehicles, queues, or suppression capacity.
+  - levelName: Road-section reliability
+    levelAim: Test whether accessibility patterns persist under multiple declared road-section stress mechanisms and severities.
+    inputs:
+    - Road Section ID
+    - Road Section Length (m)
+    - Road Failure Model
+    - Expected Failed Road Length Share
+    - Failure Intensity per Metre
+    - Simulation Replicate
+    modelOrMethod: Calibrate lambda_d so expected unavailable road length matches target d, then set q_s(lambda_d) = 1 - exp(-lambda_d
+      L_s). Reproducible section states trigger full rerouting; 1,000 nominal replicates and 100 alternative-mechanism states
+      support reliability and convergence checks.
+    outputs:
+    - Post-Earthquake Fire-Service Accessibility
+    - Scenario and Parameter Robustness
+    - Robustness and Sensitivity Summary
+    interpretation: Timely Response Probability and P90 Response Time summarize modelled stress states. Full-section unavailability
+      is a conservative rescue-safety rule, not evidence that every metre is physically damaged.
+  - levelName: Exposure and conditional consequence
+    levelAim: Locate cells where susceptibility, response constraints, water boundaries, and vulnerable exposure overlap.
+    inputs:
+    - Conditional Spread Susceptibility
+    - Disrupted Response Time (min)
+    - Water Constraint Scenario
+    - Total Population
+    - Population Age 65+ Share
+    - Medical Facility ID
+    - School Facility ID
+    - Welfare Facility ID
+    - Shelter ID
+    - Evacuation Site ID
+    modelOrMethod: For exposure objective o, compute C_j^(o) = S_j E_j^(o) [1 + A_j + W_j], where S_j is susceptibility, E_j^(o)
+      is population, older-population, or critical-facility exposure, A_j is the response-time accessibility penalty, and
+      W_j is the bounded water-stress term.
+    outputs:
+    - Conditional Fire Consequence and Vulnerable Exposure
+    - Municipality Fire Consequence and Accessibility Summary
+    - Priority Critical Facilities
+    - Highest-Priority 125 m Cells
+    interpretation: Existing mapped variables determine relative, ignition-conditioned consequence. Separate exposure objectives
+      avoid imposing one universal normative weighting; no burned area or individual-building outcome is predicted.
+  - levelName: Fire-base removal criticality
+    levelAim: Estimate each eligible base's accessibility value as loss of system substitutability after its removal.
+    inputs:
+    - Candidate Dispatch Base
+    - Conditional Fire Consequence
+    - Road Failure Model
+    - Expected Failed Road Length Share
+    modelOrMethod: For base i and objective o, L_i^(o)(omega) = J^(o)(N without i, omega) - J^(o)(N, omega). Normalize by
+      the sum across bases only when the denominator is positive and repeat across declared road states and exposure objectives.
+    outputs:
+    - Fire Base Accessibility Dependence under Road Disruption
+    - Fire Base Leave-One-Out Criticality
+    - Scenario and Parameter Robustness
+    interpretation: A larger value means the represented network has fewer effective substitutes for that base under the scenario.
+      It is not a Shapley value or a measure of actual vehicles, personnel, or suppression capacity.
+  - levelName: Intervention screening
+    levelAim: Prioritize staging, bounded water support, and road restoration within clearly defined resource classes.
+    inputs:
+    - Candidate Staging Site ID
+    - Access Mesh Code
+    - Road Section ID
+    - Road Restoration Cost Proxy
+    - Disrupted Response Time (min)
+    - Water Constraint Scenario
+    - Conditional Fire Consequence
+    modelOrMethod: For action a, Benefit_a(omega) = J_0(omega) - J_a(omega). Within each action class, choose bundles under
+      unit-count or length-aware cost-proxy budgets by exact enumeration where feasible or labelled forward selection, then
+      compare with simple baselines.
+    outputs:
+    - Intervention Priorities and Protection Gains
+    - Intervention Performance by Budget
+    interpretation: Positive benefit is modelled conditional-consequence reduction within the declared scenario. Candidate
+      sites require field verification, and incomparable resource classes are not combined into a cost-optimal portfolio.
+  - levelName: Robustness and decision limits
+    levelAim: Check convergence, ranking stability, component dependence, and retained benefit under alternative declared
+      assumptions.
+    inputs:
+    - Conditional Spread Susceptibility
+    - Conditional Fire Consequence
+    - Leave-One-Out Fire Base Value Share
+    - Road-Scenario Leave-One-Out IQR
+    - Retained Protection Gain Share
+    - Road Failure Model
+    - Expected Failed Road Length Share
+    modelOrMethod: Use rank correlations, top-set overlap, membership frequency, replicate checkpoints, component deletion,
+      accessibility multipliers, and R_A^(o)(omega_r) = Benefit_A^(o)(omega_r) / Benefit_A^(o)(omega_event) for unchanged
+      event-selected road bundles.
+    outputs:
+    - Scenario and Parameter Robustness
+    - Robustness and Sensitivity Summary
+    interpretation: High median retained gains indicate typical-state usefulness, while low minimum gains preserve a tail-risk
+      warning. Broader built-form sensitivity is deferred and universal robustness is not claimed.
