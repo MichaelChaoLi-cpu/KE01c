@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Scenario Definitions and Interpretation Boundaries
 
-Plan: catalogue the reference, event-specific, stochastic, coalition, and
+Plan: catalogue the reference, event-specific, stochastic, one-base-removal, and
 intervention scenarios together with their permitted interpretations.
 Framework: AnaSOP Sections 5, 6.1-6.8, and workflow steps 3-8.
 """
@@ -37,7 +37,7 @@ def build_table() -> pd.DataFrame:
             "Expected Failed Road Length Share": "Not imposed",
             "Water constraint": NORMAL_WATER,
             "Available candidate bases": ELIGIBLE_BASES,
-            "Analytical purpose": "Reference response time, redundancy, and station value",
+            "Analytical purpose": "Reference response time, redundancy, and base dependence",
             "Interpretation boundary": "Nominal network benchmark, not observed travel time or real-time capacity",
         },
         {
@@ -48,7 +48,7 @@ def build_table() -> pd.DataFrame:
             "Expected Failed Road Length Share": "Not assigned",
             "Water constraint": NORMAL_WATER,
             "Available candidate bases": ELIGIBLE_BASES,
-            "Analytical purpose": "Primary post-event accessibility and station-value contrast",
+            "Analytical purpose": "Primary post-event accessibility and base-dependence contrast",
             "Interpretation boundary": "Transparent planning rule; not reconstructed 2026 road passability",
         },
         {
@@ -140,26 +140,26 @@ def build_table() -> pd.DataFrame:
             "Interpretation boundary": "100-replicate pilot; weighting is imposed rather than engineering-calibrated",
         },
         {
-            "Scenario label": "Fire-base coalition availability",
+            "Scenario label": "One-fire-base removal",
             "Imposed ignition condition": CONDITIONAL_IGNITION,
-            "Event-specific road rule": "Evaluate normal and event-specific road states separately",
-            "Road Failure Model": "None",
-            "Expected Failed Road Length Share": "Not imposed",
+            "Event-specific road rule": "Evaluate normal, event-specific, and declared stochastic road states",
+            "Road Failure Model": "None or declared stochastic mechanism",
+            "Expected Failed Road Length Share": "Not imposed or 1-10%",
             "Water constraint": NORMAL_WATER,
-            "Available candidate bases": "Sampled coalitions drawn from the 81 eligible candidate bases",
-            "Analytical purpose": "Estimate leave-one-out and sampled-Shapley marginal accessibility value",
-            "Interpretation boundary": "Nominal cooperative value, not observed vehicles, staffing, dispatch, or causal station effect",
+            "Available candidate bases": "80 of 81 eligible bases per run; each base is removed once in turn",
+            "Analytical purpose": "Measure full-system accessibility loss when one base is removed",
+            "Interpretation boundary": "System dependence, not intrinsic quality, observed capacity, staffing, dispatch, or causal effect",
         },
         {
             "Scenario label": "Resource intervention counterfactual",
             "Imposed ignition condition": CONDITIONAL_IGNITION,
             "Event-specific road rule": "Event-specific baseline with selected road sections restored",
-            "Road Failure Model": "None for main estimate; representative 3% states for robustness",
-            "Expected Failed Road Length Share": "Not imposed in main estimate; 3% in robustness",
+            "Road Failure Model": "None",
+            "Expected Failed Road Length Share": "Not assigned",
             "Water constraint": "Bounded water stress with selected 1 km support areas",
-            "Available candidate bases": "Eligible bases plus selected temporary response origins",
+            "Available candidate bases": "Eligible bases plus selected mapped candidate staging sites",
             "Analytical purpose": "Compare within-class action bundles and simple baselines",
-            "Interpretation boundary": "Relative screening benefit; cross-class bundles are not cost-optimal without comparable costs",
+            "Interpretation boundary": "Relative screening benefit; staging sites require field verification, and cross-class bundles are not cost-optimal without comparable costs",
         },
     ]
     table = pd.DataFrame(rows)
@@ -175,7 +175,7 @@ def build_table() -> pd.DataFrame:
         "Independent stress test — 10%": "RE",
         "Spatially clustered pilot — 3%": "RE",
         "Hazard-weighted pilot — 3%": "RE",
-        "Fire-base coalition availability": "R0 / RE",
+        "One-fire-base removal": "R0 / RE / RF",
         "Resource intervention counterfactual": "RE + RS",
     }
     failure_code = {
@@ -183,7 +183,7 @@ def build_table() -> pd.DataFrame:
         "Length-dependent independent": "LD",
         "Spatially clustered": "SC",
         "Hazard-weighted": "HW",
-        "None for main estimate; representative 3% states for robustness": "— / LD / SC / HW",
+        "None or declared stochastic mechanism": "— / LD / SC / HW",
     }
     water_code = {
         "Normal-road reference": "W0",
@@ -196,7 +196,7 @@ def build_table() -> pd.DataFrame:
         "Independent stress test — 10%": "W0",
         "Spatially clustered pilot — 3%": "W0",
         "Hazard-weighted pilot — 3%": "W0",
-        "Fire-base coalition availability": "W0",
+        "One-fire-base removal": "W0",
         "Resource intervention counterfactual": "WB + WS",
     }
     base_code = {
@@ -210,7 +210,7 @@ def build_table() -> pd.DataFrame:
         "Independent stress test — 10%": "B81",
         "Spatially clustered pilot — 3%": "B81",
         "Hazard-weighted pilot — 3%": "B81",
-        "Fire-base coalition availability": "B⊂81",
+        "One-fire-base removal": "B81−1",
         "Resource intervention counterfactual": "B81 + T",
     }
     use_code = {
@@ -224,7 +224,7 @@ def build_table() -> pd.DataFrame:
         "Independent stress test — 10%": "STR",
         "Spatially clustered pilot — 3%": "ROB",
         "Hazard-weighted pilot — 3%": "ROB",
-        "Fire-base coalition availability": "VAL",
+        "One-fire-base removal": "LOO",
         "Resource intervention counterfactual": "INT",
     }
     boundary_code = {
@@ -238,21 +238,25 @@ def build_table() -> pd.DataFrame:
         "Independent stress test — 10%": "STR",
         "Spatially clustered pilot — 3%": "PIL",
         "Hazard-weighted pilot — 3%": "PIL",
-        "Fire-base coalition availability": "COL",
+        "One-fire-base removal": "DEP",
         "Resource intervention counterfactual": "CF",
     }
+    nominal_road_input = table["Expected Failed Road Length Share"].replace(
+        {
+            "Not imposed": "—",
+            "Not assigned": "—",
+            "Not imposed or 1-10%": "— / 1–10% nominal",
+        }
+    )
+    nominal_road_input = nominal_road_input.map(
+        lambda value: f"{value} nominal" if str(value).endswith("%") else value
+    )
     compact = pd.DataFrame(
         {
             "Scenario": scenario,
             "Road": scenario.map(road_code),
             "Failure": table["Road Failure Model"].map(failure_code),
-            "Road length failed": table["Expected Failed Road Length Share"].replace(
-                {
-                    "Not imposed": "—",
-                    "Not assigned": "—",
-                    "Not imposed in main estimate; 3% in robustness": "— / 3%",
-                }
-            ),
+            "Nominal road input": nominal_road_input,
             "Water": scenario.map(water_code),
             "Bases": scenario.map(base_code),
             "Use": scenario.map(use_code),
@@ -263,21 +267,21 @@ def build_table() -> pd.DataFrame:
         [
             {
                 "Scenario": "How to read the symbols",
-                "Road": "R0 normal roads; RE event disruption; RS selected sections restored",
+                "Road": "R0 normal roads; RE event disruption; RF declared stochastic road states; RS selected sections restored",
                 "Failure": "LD independent; SC spatial cluster; HW hazard weighted; — none",
-                "Road length failed": (
-                    "1%, 3%, 5%, or 10% = expected share of total eligible road-section "
-                    "length closed in the simulation; not an observed loss or failure probability"
+                "Nominal road input": (
+                    "1%, 3%, 5%, or 10% = nominal expected failed-length input over the "
+                    "eligible pre-mask network; mechanisms are stress scenarios, not equal-net-damage comparisons"
                 ),
                 "Water": "W0 normal reliance; WB bounded disruption; WS temporary support",
-                "Bases": "B81 all 81 bases; B⊂81 sampled subset; T temporary origins",
+                "Bases": "B81 all 81 bases; B81−1 one base removed in turn; T temporary origins",
                 "Use": (
                     "REF reference; ACC accessibility; WAT water; CON combined; REL sensitivity; "
-                    "REL-F formal estimate; STR stress test; ROB robustness; VAL base value; INT intervention"
+                    "REL-F formal estimate; STR stress test; ROB robustness; LOO one-base removal; INT intervention"
                 ),
                 "Boundary": (
                     "NOM nominal; EVT event rule; BND bounded assumption; SCN scenario; PIL pilot; "
-                    "FORM formal estimate; COL coalition; CF counterfactual"
+                    "FORM formal estimate; DEP system dependence; CF counterfactual"
                 ),
             }
         ]
@@ -319,6 +323,17 @@ def format_workbook(path: Path) -> None:
         cell.font = Font(color="263746", bold=cell.column == 1, size=9)
         cell.alignment = Alignment(wrap_text=True, vertical="top", horizontal="left")
     sheet.row_dimensions[sheet.max_row].height = 118
+    sheet.sheet_properties.pageSetUpPr.fitToPage = True
+    sheet.page_setup.orientation = "landscape"
+    sheet.page_setup.paperSize = sheet.PAPERSIZE_A3
+    sheet.page_setup.fitToWidth = 1
+    sheet.page_setup.fitToHeight = 1
+    sheet.print_title_rows = "1:1"
+    sheet.print_area = sheet.dimensions
+    sheet.page_margins.left = 0.2
+    sheet.page_margins.right = 0.2
+    sheet.page_margins.top = 0.3
+    sheet.page_margins.bottom = 0.3
     workbook.save(path)
 
 

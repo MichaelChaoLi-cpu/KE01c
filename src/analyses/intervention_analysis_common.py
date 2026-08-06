@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import hashlib
 from pathlib import Path
 
 import geopandas as gpd
@@ -32,13 +33,20 @@ ADMIN_PATH = PROCESSED / "administrative_areas_preprocessed.parquet"
 ACTION_PATH = RESULTS / "derived/intervention_actions.parquet"
 PERFORMANCE_PATH = RESULTS / "derived/intervention_performance.parquet"
 CONTEXT_PATH = RESULTS / "derived/intervention_context_125m.parquet"
+STAGING_CANDIDATE_PATH = RESULTS / "derived/staging_site_candidates.parquet"
 SECTION_EDGE_PATH = PROCESSED / "routable_road_edges_sectioned_preprocessed.parquet"
 SECTION_INTERVENTION_PATH = PROCESSED / "road_section_intervention_preprocessed.parquet"
+PUBLIC_FACILITY_PATH = PROCESSED / "public_facilities_preprocessed.parquet"
+SCHOOL_PATH = PROCESSED / "schools_preprocessed.parquet"
+SHELTER_PATH = PROCESSED / "designated_shelters_preprocessed.parquet"
+EVACUATION_PATH = PROCESSED / "emergency_evacuation_sites_preprocessed.parquet"
+PARK_PATH = PROCESSED / "mlit_urban_parks_preprocessed.parquet"
 
 PROJECTED_CRS = 6670
 MAX_BUDGET = 5
 PREPOSITION_CANDIDATES = 35
 PREPOSITION_SPACING_M = 2_000.0
+STAGING_MAX_MESH_DISTANCE_M = 250.0
 WATER_CANDIDATES = 25
 WATER_SPACING_M = 1_200.0
 WATER_SUPPORT_RADIUS_M = 1_000.0
@@ -57,6 +65,11 @@ def cache_is_current() -> bool:
         ADMIN_PATH,
         SECTION_EDGE_PATH,
         SECTION_INTERVENTION_PATH,
+        PUBLIC_FACILITY_PATH,
+        SCHOOL_PATH,
+        SHELTER_PATH,
+        EVACUATION_PATH,
+        PARK_PATH,
         DEMAND_PATH,
         DISPATCH_PATH,
         RESULTS / "derived/network/fire_station_od_central.npz",
@@ -66,10 +79,12 @@ def cache_is_current() -> bool:
         ACTION_PATH.exists()
         and PERFORMANCE_PATH.exists()
         and CONTEXT_PATH.exists()
+        and STAGING_CANDIDATE_PATH.exists()
         and min(
             ACTION_PATH.stat().st_mtime,
             PERFORMANCE_PATH.stat().st_mtime,
             CONTEXT_PATH.stat().st_mtime,
+            STAGING_CANDIDATE_PATH.stat().st_mtime,
         )
         >= max(path.stat().st_mtime for path in sources)
     )
@@ -99,6 +114,171 @@ def spaced_candidates(
         if not eligible[index] or not np.isfinite(scores[index]):
             continue
         point = points.iloc[index]
+        xy = (float(point.x), float(point.y))
+        if selected_xy and min(
+            np.hypot(xy[0] - x, xy[1] - y) for x, y in selected_xy
+        ) < spacing_m:
+            continue
+        selected.append(int(index))
+        selected_xy.append(xy)
+        if len(selected) >= count:
+            break
+    return selected
+
+
+def load_staging_site_pool() -> gpd.GeoDataFrame:
+    """Return traceable public or emergency sites for staging-site screening."""
+
+    def point_sites(
+        path: Path,
+        *,
+        identifier: str,
+        name: str,
+        prefix: str,
+        site_type: str,
+        priority: int,
+        status: str | None = None,
+    ) -> gpd.GeoDataFrame:
+        columns = [identifier, name, "Geometry"]
+        if status is not None:
+            columns.append(status)
+        frame = gpd.read_parquet(path, columns=columns).to_crs(PROJECTED_CRS)
+        retained = frame.loc[frame[identifier].notna() & frame.geometry.notna()].copy()
+        result = gpd.GeoDataFrame(
+            {
+                "Candidate Staging Site ID": prefix
+                + "::"
+                + retained[identifier].astype("string"),
+                "Candidate Staging Site Type": site_type,
+                "Candidate Staging Site Name": retained[name]
+                .astype("string")
+                .fillna(site_type),
+                "Candidate Source Status": (
+                    retained[status].astype("string")
+                    if status is not None
+                    else pd.Series(pd.NA, index=retained.index, dtype="string")
+                ),
+                "Staging Source Priority": priority,
+                "Geometry": retained.geometry,
+            },
+            geometry="Geometry",
+            crs=retained.crs,
+        )
+        return result.reset_index(drop=True)
+
+    public = point_sites(
+        PUBLIC_FACILITY_PATH,
+        identifier="Public Facility ID",
+        name="Public Facility Name",
+        prefix="PUBLIC",
+        site_type="Public facility",
+        priority=3,
+        status="Public Facility Class",
+    )
+    schools = point_sites(
+        SCHOOL_PATH,
+        identifier="School Facility ID",
+        name="School Name",
+        prefix="SCHOOL",
+        site_type="School",
+        priority=2,
+        status="Suspension Status",
+    )
+    shelters = point_sites(
+        SHELTER_PATH,
+        identifier="Shelter ID",
+        name="Shelter Name",
+        prefix="SHELTER",
+        site_type="Designated shelter",
+        priority=4,
+    )
+
+    evacuation_source = gpd.read_parquet(EVACUATION_PATH).to_crs(PROJECTED_CRS)
+    evacuation_source = evacuation_source.loc[
+        evacuation_source["Earthquake Designation"].eq(1)
+        | evacuation_source["Large-Scale Fire Designation"].eq(1)
+    ].copy()
+    evacuation = gpd.GeoDataFrame(
+        {
+            "Candidate Staging Site ID": "EVACUATION::"
+            + evacuation_source["Evacuation Site ID"].astype("string"),
+            "Candidate Staging Site Type": "Emergency evacuation site",
+            "Candidate Staging Site Name": evacuation_source[
+                "Evacuation Site Name"
+            ].astype("string"),
+            "Candidate Source Status": np.where(
+                evacuation_source["Earthquake Designation"].eq(1),
+                "Earthquake-designated",
+                "Large-scale-fire-designated",
+            ),
+            "Staging Source Priority": 5,
+            "Geometry": evacuation_source.geometry,
+        },
+        geometry="Geometry",
+        crs=evacuation_source.crs,
+    ).reset_index(drop=True)
+
+    park_source = gpd.read_parquet(PARK_PATH).to_crs(PROJECTED_CRS)
+    park_source = park_source.loc[
+        park_source["Park Name"].notna()
+        & park_source["Park Type"].ne("\u5893\u5712")
+        & park_source.geometry.notna()
+    ].copy()
+    park_points = park_source.geometry.representative_point()
+    park_ids = [
+        "PARK::" + hashlib.sha1(geometry.wkb).hexdigest()[:16]
+        for geometry in park_source.geometry
+    ]
+    parks = gpd.GeoDataFrame(
+        {
+            "Candidate Staging Site ID": park_ids,
+            "Candidate Staging Site Type": "Urban park",
+            "Candidate Staging Site Name": park_source["Park Name"].astype("string"),
+            "Candidate Source Status": park_source["Park Type"].astype("string"),
+            "Staging Source Priority": 1,
+            "Geometry": park_points,
+        },
+        geometry="Geometry",
+        crs=park_source.crs,
+    ).reset_index(drop=True)
+
+    pool = gpd.GeoDataFrame(
+        pd.concat(
+            [evacuation, shelters, public, schools, parks],
+            ignore_index=True,
+        ),
+        geometry="Geometry",
+        crs=PROJECTED_CRS,
+    )
+    if pool["Candidate Staging Site ID"].duplicated().any():
+        raise ValueError("Candidate staging-site identifiers are not unique")
+    return pool
+
+
+def select_spaced_staging_sites(
+    frame: gpd.GeoDataFrame,
+    *,
+    count: int,
+    spacing_m: float,
+) -> list[int]:
+    """Select consequence-priority traceable sites with a minimum spacing."""
+    order = frame.sort_values(
+        [
+            "Combined Stress Conditional Consequence",
+            "Staging Source Priority",
+            "Staging-to-Mesh Distance (m)",
+            "Candidate Staging Site ID",
+        ],
+        ascending=[False, False, True, True],
+        kind="stable",
+    ).index
+    selected: list[int] = []
+    selected_xy: list[tuple[float, float]] = []
+    for index in order:
+        row = frame.loc[index]
+        if not bool(row["Candidate Network Eligible"]):
+            continue
+        point = row["Geometry"]
         xy = (float(point.x), float(point.y))
         if selected_xy and min(
             np.hypot(xy[0] - x, xy[1] - y) for x, y in selected_xy
@@ -480,27 +660,88 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
     demand_lookup = {str(node): index for index, node in enumerate(demand_nodes)}
     station_sources = dispatch["Dispatch Base Node ID"].astype("string").tolist()
 
-    eligible_preposition = np.array(
-        [str(node) in central_graph for node in demand_nodes],
-        dtype=bool,
+    staging_sites = load_staging_site_pool()
+    demand_sites = demand[
+        [
+            "Mesh Code",
+            "Demand Node ID",
+            "Network Snap Distance (m)",
+            "Network Snap Accepted",
+            "Geometry",
+        ]
+    ].rename(
+        columns={
+            "Mesh Code": "Access Mesh Code",
+            "Demand Node ID": "Staging Demand Node ID",
+            "Network Snap Distance (m)": "Staging Access Network Snap Distance (m)",
+        }
     )
-    preposition_candidates = spaced_candidates(
-        cell_points,
-        cell_loss,
-        eligible_preposition,
+    staging_candidates = gpd.sjoin_nearest(
+        staging_sites,
+        demand_sites,
+        how="left",
+        max_distance=STAGING_MAX_MESH_DISTANCE_M,
+        distance_col="Staging-to-Mesh Distance (m)",
+    ).drop(columns="index_right")
+    staging_candidates = (
+        staging_candidates.sort_values(
+            [
+                "Candidate Staging Site ID",
+                "Staging-to-Mesh Distance (m)",
+            ],
+            kind="stable",
+        )
+        .drop_duplicates("Candidate Staging Site ID", keep="first")
+        .reset_index(drop=True)
+    )
+    staging_candidates = staging_candidates.merge(
+        context[
+            [
+                "Mesh Code",
+                "Combined Stress Conditional Consequence",
+                "Total Population",
+            ]
+        ].rename(columns={"Mesh Code": "Access Mesh Code"}),
+        on="Access Mesh Code",
+        how="left",
+        validate="many_to_one",
+    )
+    staging_candidates = gpd.GeoDataFrame(
+        staging_candidates,
+        geometry="Geometry",
+        crs=PROJECTED_CRS,
+    )
+    staging_candidates["Candidate Network Eligible"] = (
+        staging_candidates["Network Snap Accepted"].eq(True)
+        & staging_candidates["Staging Demand Node ID"].notna()
+        & staging_candidates["Staging Demand Node ID"]
+        .astype("string")
+        .map(lambda node: str(node) in central_graph)
+        & staging_candidates["Combined Stress Conditional Consequence"].notna()
+    )
+    preposition_candidates = select_spaced_staging_sites(
+        staging_candidates,
         count=PREPOSITION_CANDIDATES,
         spacing_m=PREPOSITION_SPACING_M,
     )
+    if len(preposition_candidates) != PREPOSITION_CANDIDATES:
+        raise ValueError(
+            "Insufficient traceable staging sites after road-access and spacing screening"
+        )
+    staging_candidates["Screened Staging Candidate"] = False
+    staging_candidates.loc[
+        preposition_candidates, "Screened Staging Candidate"
+    ] = True
     candidate_times: dict[int, np.ndarray] = {}
     for number, index in enumerate(preposition_candidates, start=1):
         candidate_times[index] = travel_vector(
             central_graph,
-            str(demand_nodes[index]),
+            str(staging_candidates.loc[index, "Staging Demand Node ID"]),
             demand_lookup,
             len(context),
         )
         print(
-            f"temporary-origin travel times: {number}/{len(preposition_candidates)}",
+            f"staging-site travel times: {number}/{len(preposition_candidates)}",
             flush=True,
         )
     preposition_selected, preposition_benefits = greedy_prepositioning(
@@ -519,6 +760,12 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         objective_weight,
         population_weight,
     )
+    preposition_selected_ids = staging_candidates.loc[
+        preposition_selected, "Candidate Staging Site ID"
+    ].astype(str).tolist()
+    preposition_baseline_selected_ids = staging_candidates.loc[
+        preposition_baseline_selected, "Candidate Staging Site ID"
+    ].astype(str).tolist()
 
     water_candidates = spaced_candidates(
         cell_points,
@@ -583,9 +830,6 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
             "Sparse event baseline does not reproduce the accepted station OD matrix: "
             f"maximum difference={baseline_difference:.6g} minutes"
         )
-    road_time_cache: dict[frozenset[str], np.ndarray] = {
-        frozenset(): baseline_time
-    }
     road_penalty_cache: dict[frozenset[str], np.ndarray] = {
         frozenset(): baseline_penalty
     }
@@ -595,20 +839,6 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         if section_ids:
             mask[section_position.loc[list(section_ids)].to_numpy(np.int32)] = True
         return mask
-
-    def road_bundle_time_benefit(section_ids: list[str]) -> float:
-        """Fast screening benefit using exact nearest-base rerouting."""
-        key = frozenset(section_ids)
-        if key not in road_time_cache:
-            response_time, _ = sparse_network.route(
-                restored=restored_mask(key),
-            )
-            road_time_cache[key] = np.minimum(response_time, UNMET_SERVICE_CAP_MIN)
-        candidate_penalty = accessibility_penalty(
-            road_time_cache[key],
-            baseline_count,
-        )
-        return float(objective_weight @ (baseline_penalty - candidate_penalty))
 
     def road_bundle_benefit(section_ids: list[str]) -> float:
         """Final benefit using nearest time and exact 10-minute backup counts."""
@@ -623,31 +853,38 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         return float(objective_weight @ (baseline_penalty - road_penalty_cache[key]))
 
     singleton_benefit = {
-        section_id: road_bundle_time_benefit([section_id])
+        section_id: road_bundle_benefit([section_id])
         for section_id in candidate_ids
     }
     candidate_ids = [
-        section_id for section_id in candidate_ids if singleton_benefit[section_id] > 0
+        section_id
+        for section_id in candidate_ids
+        if singleton_benefit[section_id] > 1e-12
     ]
     if not candidate_ids:
-        raise ValueError("Screened road sections produced no positive accessibility gain")
+        raise ValueError("Screened road sections produced no positive consequence reduction")
 
     road_selected: list[str] = []
+    current_road_benefit = 0.0
     for budget in range(1, MAX_BUDGET + 1):
         best_section = None
-        best_benefit = -np.inf
+        best_total_benefit = current_road_benefit
+        best_marginal_benefit = 0.0
         for section_id in candidate_ids:
             if section_id in road_selected:
                 continue
-            benefit = road_bundle_time_benefit(road_selected + [section_id])
-            if benefit > best_benefit:
-                best_benefit = benefit
+            total_benefit = road_bundle_benefit(road_selected + [section_id])
+            marginal_benefit = total_benefit - current_road_benefit
+            if marginal_benefit > best_marginal_benefit + 1e-12:
+                best_total_benefit = total_benefit
+                best_marginal_benefit = marginal_benefit
                 best_section = section_id
         if best_section is None:
             break
         road_selected.append(best_section)
+        current_road_benefit = best_total_benefit
         print(
-            f"road-section count screening budget: {budget}/{MAX_BUDGET}",
+            f"road-section count consequence-greedy budget: {budget}/{MAX_BUDGET}",
             flush=True,
         )
 
@@ -678,27 +915,54 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         kind="stable",
     )["Road Section ID"].astype(str).tolist()
     road_baseline_selected = baseline_order[:MAX_BUDGET]
-    cost_order = sorted(
-        candidate_ids,
-        key=lambda section_id: (
-            singleton_benefit[section_id] / candidate_cost.loc[section_id]
-        ),
-        reverse=True,
-    )
+    if (
+        candidate_cost.reindex(candidate_ids).isna().any()
+        or (candidate_cost.reindex(candidate_ids) <= 0).any()
+    ):
+        raise ValueError("Every road-restoration candidate requires a positive cost proxy")
 
-    def nested_bundles_within_cost(order: list[str]) -> list[list[str]]:
-        selected: list[str] = []
-        used = 0.0
+    def consequence_greedy_bundles_within_cost() -> list[list[str]]:
+        """Re-optimize exact marginal consequence reduction per cost at each budget."""
         bundles: list[list[str]] = []
         for budget in range(1, MAX_BUDGET + 1):
-            for section_id in order:
-                if section_id in selected:
-                    continue
-                cost = float(candidate_cost.loc[section_id])
-                if used + cost <= float(budget) + 1e-12:
-                    selected.append(section_id)
-                    used += cost
+            selected: list[str] = []
+            used_cost = 0.0
+            current_benefit = 0.0
+            while True:
+                best_section = None
+                best_total_benefit = current_benefit
+                best_marginal_benefit = 0.0
+                best_ratio = 0.0
+                for section_id in candidate_ids:
+                    if section_id in selected:
+                        continue
+                    cost = float(candidate_cost.loc[section_id])
+                    if used_cost + cost > float(budget) + 1e-12:
+                        continue
+                    total_benefit = road_bundle_benefit(selected + [section_id])
+                    marginal_benefit = total_benefit - current_benefit
+                    ratio = marginal_benefit / cost
+                    if (
+                        ratio > best_ratio + 1e-12
+                        or (
+                            np.isclose(ratio, best_ratio, rtol=0, atol=1e-12)
+                            and marginal_benefit > best_marginal_benefit + 1e-12
+                        )
+                    ):
+                        best_section = section_id
+                        best_total_benefit = total_benefit
+                        best_marginal_benefit = marginal_benefit
+                        best_ratio = ratio
+                if best_section is None or best_marginal_benefit <= 0:
+                    break
+                selected.append(best_section)
+                used_cost += float(candidate_cost.loc[best_section])
+                current_benefit = best_total_benefit
             bundles.append(selected.copy())
+            print(
+                f"road-section length consequence-greedy budget: {budget}/{MAX_BUDGET}",
+                flush=True,
+            )
         return bundles
 
     road_count_bundles = [
@@ -709,8 +973,20 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
         road_baseline_selected[: min(budget, len(road_baseline_selected))]
         for budget in range(1, MAX_BUDGET + 1)
     ]
-    road_cost_bundles = nested_bundles_within_cost(cost_order)
-    road_baseline_cost_bundles = nested_bundles_within_cost(baseline_order)
+    road_cost_bundles = consequence_greedy_bundles_within_cost()
+
+    road_baseline_cost_bundles: list[list[str]] = []
+    baseline_cost_selected: list[str] = []
+    baseline_cost_used = 0.0
+    for budget in range(1, MAX_BUDGET + 1):
+        for section_id in baseline_order:
+            if section_id in baseline_cost_selected:
+                continue
+            cost = float(candidate_cost.loc[section_id])
+            if baseline_cost_used + cost <= float(budget) + 1e-12:
+                baseline_cost_selected.append(section_id)
+                baseline_cost_used += cost
+        road_baseline_cost_bundles.append(baseline_cost_selected.copy())
     road_count_benefits = [road_bundle_benefit(bundle) for bundle in road_count_bundles]
     road_baseline_count_benefits = [
         road_bundle_benefit(bundle) for bundle in road_baseline_count_bundles
@@ -723,15 +999,15 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
     performance_records: list[dict[str, object]] = []
     count_performance_specs = (
         (
-            "Temporary response base",
+            "Candidate staging site",
             "Greedy consequence reduction",
-            preposition_selected,
+            preposition_selected_ids,
             preposition_benefits,
         ),
         (
-            "Temporary response base",
+            "Candidate staging site",
             "Simple baseline",
-            preposition_baseline_selected,
+            preposition_baseline_selected_ids,
             preposition_baseline_benefits,
         ),
         (
@@ -837,17 +1113,32 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
 
     action_records: list[dict[str, object]] = []
     for rank, index in enumerate(preposition_selected, start=1):
+        row = staging_candidates.loc[index]
         action_records.append(
             {
-                "Action ID": f"PREPOSITION::{context.iloc[index]['Mesh Code']}",
-                "Action Type": "Temporary response base",
+                "Action ID": f"STAGING::{row['Candidate Staging Site ID']}",
+                "Action Type": "Candidate staging site",
                 "Selection Rank": rank,
                 "Road Selection Basis": None,
                 "Road Section ID": None,
                 "Road Section Length (m)": np.nan,
                 "Road Restoration Cost Proxy": np.nan,
-                "Action Description": "Temporary dispatch origin at a screened 125 m cell",
-                "Geometry": cell_points.iloc[index],
+                "Candidate Staging Site ID": row["Candidate Staging Site ID"],
+                "Candidate Staging Site Type": row["Candidate Staging Site Type"],
+                "Candidate Staging Site Name": row["Candidate Staging Site Name"],
+                "Candidate Source Status": row["Candidate Source Status"],
+                "Access Mesh Code": row["Access Mesh Code"],
+                "Staging-to-Mesh Distance (m)": float(
+                    row["Staging-to-Mesh Distance (m)"]
+                ),
+                "Staging Access Network Snap Distance (m)": float(
+                    row["Staging Access Network Snap Distance (m)"]
+                ),
+                "Field Verification Required": True,
+                "Action Description": (
+                    "Mapped public or emergency candidate staging site; field verification required"
+                ),
+                "Geometry": row["Geometry"],
             }
         )
     for rank, index in enumerate(water_selected, start=1):
@@ -889,14 +1180,22 @@ def construct_interventions() -> tuple[gpd.GeoDataFrame, pd.DataFrame, gpd.GeoDa
                 }
             )
     actions = gpd.GeoDataFrame(action_records, geometry="Geometry", crs=PROJECTED_CRS)
+    staging_candidates["Selected by Consequence Greedy"] = (
+        staging_candidates.index.isin(preposition_selected)
+    )
+    staging_candidates["Selected by Population Baseline"] = (
+        staging_candidates.index.isin(preposition_baseline_selected)
+    )
 
     ACTION_PATH.parent.mkdir(parents=True, exist_ok=True)
     actions.to_parquet(ACTION_PATH, index=False)
     performance.to_parquet(PERFORMANCE_PATH, index=False)
     context.to_parquet(CONTEXT_PATH, index=False)
+    staging_candidates.to_parquet(STAGING_CANDIDATE_PATH, index=False)
     print(f"Saved: {ACTION_PATH.relative_to(ROOT)}", flush=True)
     print(f"Saved: {PERFORMANCE_PATH.relative_to(ROOT)}", flush=True)
     print(f"Saved: {CONTEXT_PATH.relative_to(ROOT)}", flush=True)
+    print(f"Saved: {STAGING_CANDIDATE_PATH.relative_to(ROOT)}", flush=True)
     return actions, performance, context
 
 

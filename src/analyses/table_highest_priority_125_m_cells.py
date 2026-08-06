@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CONTEXT_PATH = ROOT / "data/results/derived/intervention_context_125m.parquet"
 ADMIN_PATH = ROOT / "data/processed/administrative_areas_preprocessed.parquet"
 LAND_USE_PATH = ROOT / "data/processed/mlit_land_use_zones_preprocessed.parquet"
-OUTPUT = ROOT / "data/results/tables/Table_highest_priority_125m_cells.xlsx"
+OUTPUT = ROOT / "data/results/tables/Table_highest_priority_125_m_cells.xlsx"
 
 PROJECTED_CRS = 6670
 TOP_CELL_COUNT = 50

@@ -37,21 +37,21 @@ MAP_BUDGET = 3
 BAR_BUDGET = 3
 
 ACTION_COLORS = {
-    "Temporary response base": "#246b9a",
+    "Candidate staging site": "#246b9a",
     "Bounded water support": "#1f927a",
     "Priority road restoration": "#c84d3a",
 }
 ACTION_MARKERS = {
-    "Temporary response base": "o",
+    "Candidate staging site": "o",
     "Bounded water support": "s",
 }
 SHORT_LABELS = {
-    "Temporary response base": "Response base",
+    "Candidate staging site": "Staging site",
     "Bounded water support": "Water support",
     "Priority road restoration": "Road sections",
 }
 BAR_ITEMS = (
-    ("Temporary response base", "Action count", "Response base"),
+    ("Candidate staging site", "Action count", "Staging site"),
     ("Bounded water support", "Action count", "Water support"),
     ("Priority road restoration", "Road section count", "Road: 3 sections"),
     (
@@ -244,7 +244,7 @@ def make_figure(
             alpha=0.65,
             zorder=5,
         )
-    for action_type in ("Temporary response base", "Bounded water support"):
+    for action_type in ("Candidate staging site", "Bounded water support"):
         subset = mapped.loc[mapped["Action Type"].eq(action_type)]
         if not subset.empty:
             subset.plot(
@@ -302,10 +302,10 @@ def make_figure(
             [0],
             marker="o",
             linestyle="none",
-            markerfacecolor=ACTION_COLORS["Temporary response base"],
+            markerfacecolor=ACTION_COLORS["Candidate staging site"],
             markeredgecolor="white",
             markersize=6,
-            label="Temporary response base",
+            label="Candidate staging site",
         ),
         Line2D(
             [0],
@@ -384,7 +384,7 @@ def make_figure(
         performance["Strategy"].eq("Greedy consequence reduction")
     ].copy()
     curve_items = (
-        ("Temporary response base", "Action count", "Response base", "o", "#246b9a", "-"),
+        ("Candidate staging site", "Action count", "Staging site", "o", "#246b9a", "-"),
         ("Bounded water support", "Action count", "Water support", "s", "#1f927a", "-"),
         (
             "Priority road restoration",

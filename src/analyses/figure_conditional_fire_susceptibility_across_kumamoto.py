@@ -70,10 +70,16 @@ def percentile_rank(values: np.ndarray) -> np.ndarray:
 
 
 def cache_is_current() -> bool:
-    """Use the derived layer only when it is newer than every source layer."""
+    """Use the derived layer only when inputs and generating code are unchanged."""
     if not CACHE.exists():
         return False
-    source_paths = (MESH_PATH, BUILDING_PATH, ROAD_PATH, LAND_USE_PATH)
+    source_paths = (
+        MESH_PATH,
+        BUILDING_PATH,
+        ROAD_PATH,
+        LAND_USE_PATH,
+        Path(__file__).resolve(),
+    )
     return CACHE.stat().st_mtime >= max(path.stat().st_mtime for path in source_paths)
 
 

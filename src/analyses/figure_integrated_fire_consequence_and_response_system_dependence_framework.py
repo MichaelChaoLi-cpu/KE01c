@@ -12,14 +12,14 @@ from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = PROJECT_ROOT / "data/results/figures"
-SVG_PATH = OUTPUT_DIR / "Figure_integrated_fire_consequence_and_station_value_framework.svg"
-PNG_PATH = OUTPUT_DIR / "Figure_integrated_fire_consequence_and_station_value_framework.png"
+SVG_PATH = OUTPUT_DIR / "Figure_integrated_fire_consequence_and_response_system_dependence_framework.svg"
+PNG_PATH = OUTPUT_DIR / "Figure_integrated_fire_consequence_and_response_system_dependence_framework.png"
 
 CANVAS_WIDTH = 1600
-CANVAS_HEIGHT = 880
+CANVAS_HEIGHT = 810
 OUTPUT_DPI = 400
 OUTPUT_WIDTH = 5600
-OUTPUT_HEIGHT = 3080
+OUTPUT_HEIGHT = 2835
 CHROME_PATH = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
 
 
@@ -33,15 +33,14 @@ SVG = f"""<?xml version="1.0" encoding="UTF-8"?>
       .label {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.3px; }}
       .card-title {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 25px; font-weight: 700; fill: #1f3140; }}
       .body {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 18px; font-weight: 400; fill: #617383; }}
-      .metric {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 19px; font-weight: 700; fill: #243746; }}
+      .metric {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 17px; font-weight: 700; fill: #243746; }}
       .hero-kicker {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.4px; fill: #bfd7e6; }}
       .hero-title {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 31px; font-weight: 700; fill: #ffffff; }}
       .formula {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 21px; font-weight: 400; fill: #e9f1f5; }}
       .small {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 15px; font-weight: 400; fill: #6c7c89; }}
       .output-title {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 25px; font-weight: 700; fill: #223441; }}
-      .output-metric {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #344b5b; }}
+      .output-metric {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 18px; font-weight: 700; fill: #344b5b; }}
       .output-body {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 17px; font-weight: 400; fill: #627482; }}
-      .footer {{ font-family: "DejaVu Sans", Arial, sans-serif; font-size: 15px; font-weight: 400; fill: #637481; }}
     </style>
     <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%">
       <feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#213849" flood-opacity="0.10"/>
@@ -55,7 +54,7 @@ SVG = f"""<?xml version="1.0" encoding="UTF-8"?>
     </linearGradient>
   </defs>
 
-  <rect width="1600" height="950" fill="#ffffff"/>
+  <rect width="1600" height="810" fill="#ffffff"/>
 
   <g transform="translate(0,-70)">
   <!-- Connectors behind the cards -->
@@ -98,10 +97,10 @@ SVG = f"""<?xml version="1.0" encoding="UTF-8"?>
   <!-- Card 3 -->
   <text x="858" y="183" class="label" fill="#37857e">Firefighting water</text>
   <text x="858" y="221" class="card-title">Is water dependable?</text>
-  <text x="858" y="257" class="body">Compare normal supply with areas</text>
-  <text x="858" y="284" class="body">where the network cannot be relied on</text>
+  <text x="858" y="255" class="body">Compare normal supply with places</text>
+  <text x="858" y="279" class="body">where piped water may not work</text>
   <line x1="858" y1="300" x2="1132" y2="300" stroke="#d8e2e8"/>
-  <text x="858" y="324" class="metric">Possible limits on suppression</text>
+  <text x="858" y="324" class="metric">Less water for suppression</text>
 
   <!-- Card 4 -->
   <text x="1238" y="183" class="label" fill="#9b6d49">People and services</text>
@@ -143,23 +142,18 @@ SVG = f"""<?xml version="1.0" encoding="UTF-8"?>
 
   <circle cx="638" cy="694" r="19" fill="#eee9f6"/>
   <text x="638" y="700" text-anchor="middle" class="label" fill="#705a96">02</text>
-  <text x="672" y="701" class="output-title">Most valuable fire stations</text>
-  <text x="632" y="748" class="output-metric">Which stations are hardest to replace?</text>
-  <text x="632" y="782" class="output-body">Find stations whose loss leaves important</text>
-  <text x="632" y="808" class="output-body">areas without a good alternative response.</text>
+  <text x="672" y="701" class="output-title">Hard-to-replace fire bases</text>
+  <text x="632" y="748" class="output-metric">Where does one lost base hurt most?</text>
+  <text x="632" y="782" class="output-body">Remove one base at a time while every</text>
+  <text x="632" y="808" class="output-body">other base remains available.</text>
 
   <circle cx="1168" cy="694" r="19" fill="#e9f2e3"/>
   <text x="1168" y="700" text-anchor="middle" class="label" fill="#5f8842">03</text>
-  <text x="1202" y="701" class="output-title">Best use of extra resources</text>
+  <text x="1202" y="701" class="output-title">Resource interventions</text>
   <text x="1162" y="748" class="output-metric">Which action protects the most?</text>
-  <text x="1162" y="782" class="output-body">Compare extra response units, water support,</text>
+  <text x="1162" y="782" class="output-body">Compare candidate staging sites, water support,</text>
   <text x="1162" y="808" class="output-body">and reopening important road links.</text>
 
-  <!-- Interpretation boundary -->
-  <line x1="70" y1="884" x2="1530" y2="884" stroke="#d5dde2" stroke-width="1.5"/>
-  <rect x="70" y="898" width="154" height="28" rx="14" fill="#eef2f4"/>
-  <text x="147" y="917" text-anchor="middle" class="label" font-size="13" fill="#576b79">Important note</text>
-  <text x="246" y="918" class="footer">A planning comparison — it does not predict where a fire will start, exactly what will burn, or real-time firefighting performance.</text>
   </g>
 </svg>
 """
@@ -174,7 +168,7 @@ def main() -> None:
         raise FileNotFoundError(f"SVG renderer not found: {CHROME_PATH}")
 
     # Chrome renders the native SVG at 3.5 device pixels per SVG pixel:
-    # 1600 x 880 -> 5600 x 3080, equivalent to a 14-inch figure at 400 dpi.
+    # 1600 x 810 -> 5600 x 2835, equivalent to a 14-inch figure at 400 dpi.
     with tempfile.TemporaryDirectory(prefix="ke01c_chrome_") as profile_dir:
         raw_png = Path(profile_dir) / "chrome_render.png"
         command = [

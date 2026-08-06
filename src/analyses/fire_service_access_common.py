@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import heapq
+import json
 from collections import Counter
 from pathlib import Path
 
@@ -16,9 +17,93 @@ NETWORK_DIR = ROOT / "data/results/derived/network"
 EDGE_PATH = NETWORK_DIR / "routable_road_edges.parquet"
 DISPATCH_PATH = NETWORK_DIR / "fire_dispatch_base_access.parquet"
 DEMAND_PATH = NETWORK_DIR / "population_mesh_access.parquet"
+ACCESS_PATH = NETWORK_DIR / "fire_service_access_125m.parquet"
+ACCESS_METADATA_PATH = NETWORK_DIR / "fire_service_access_125m.metadata.json"
 
 UNMET_SERVICE_CAP_MIN = 30.0
 BACKUP_THRESHOLD_MIN = 10.0
+CACHE_VERSION = 2
+
+
+def file_signature(path: Path) -> dict[str, int | str]:
+    """Return a compact freshness signature for one cache dependency."""
+    stat = path.stat()
+    return {
+        "path": str(path.relative_to(ROOT)),
+        "size": int(stat.st_size),
+        "mtime_ns": int(stat.st_mtime_ns),
+    }
+
+
+def ordered_identifier_vector(frame: pd.DataFrame, columns: list[str]) -> np.ndarray:
+    """Encode ordered row identifiers without relying on dataframe dimensions."""
+    identifiers = frame.loc[:, columns].astype("string").fillna("<NA>")
+    return identifiers.agg("\x1f".join, axis=1).to_numpy(dtype=str)
+
+
+def od_cache_metadata(
+    scenario: str,
+    demand: pd.DataFrame,
+    dispatch: pd.DataFrame,
+) -> dict[str, object]:
+    """Describe the inputs and declared parameters that determine one OD cache."""
+    return {
+        "cache_version": CACHE_VERSION,
+        "kind": "fire_station_od",
+        "scenario": scenario.casefold(),
+        "parameters": {
+            "unmet_service_cap_min": UNMET_SERVICE_CAP_MIN,
+            "backup_threshold_min": BACKUP_THRESHOLD_MIN,
+        },
+        "row_counts": {"demand": len(demand), "dispatch": len(dispatch)},
+        "sources": [
+            file_signature(path)
+            for path in [EDGE_PATH, DEMAND_PATH, DISPATCH_PATH, Path(__file__).resolve()]
+        ],
+    }
+
+
+def access_cache_metadata() -> dict[str, object]:
+    """Describe the current combined fire-access layer dependencies."""
+    return {
+        "cache_version": CACHE_VERSION,
+        "kind": "fire_service_access_125m",
+        "parameters": {
+            "normal_scenario": "normal",
+            "disrupted_scenario": "central",
+            "unmet_service_cap_min": UNMET_SERVICE_CAP_MIN,
+            "backup_threshold_min": BACKUP_THRESHOLD_MIN,
+        },
+        "sources": [
+            file_signature(path)
+            for path in [
+                EDGE_PATH,
+                DEMAND_PATH,
+                DISPATCH_PATH,
+                NETWORK_DIR / "fire_station_od_normal.npz",
+                NETWORK_DIR / "fire_station_od_central.npz",
+                Path(__file__).resolve(),
+            ]
+        ],
+    }
+
+
+def json_metadata_matches(path: Path, expected: dict[str, object]) -> bool:
+    """Return whether a JSON sidecar exactly matches the expected metadata."""
+    if not path.exists():
+        return False
+    try:
+        return json.loads(path.read_text(encoding="utf-8")) == expected
+    except (OSError, json.JSONDecodeError):
+        return False
+
+
+def write_json_metadata(path: Path, metadata: dict[str, object]) -> None:
+    """Write deterministic cache metadata after its associated output succeeds."""
+    path.write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def scenario_availability(edges: pd.DataFrame, scenario: str) -> pd.Series:
@@ -194,12 +279,44 @@ def build_station_od(scenario: str) -> tuple[np.ndarray, pd.DataFrame, pd.DataFr
     output_path = NETWORK_DIR / f"fire_station_od_{scenario.casefold()}.npz"
     demand = pd.read_parquet(DEMAND_PATH)
     dispatch = pd.read_parquet(DISPATCH_PATH)
+    expected_metadata = od_cache_metadata(scenario, demand, dispatch)
+    expected_demand_ids = ordered_identifier_vector(
+        demand,
+        ["Mesh Code", "Demand Node ID"],
+    )
+    expected_dispatch_ids = ordered_identifier_vector(
+        dispatch,
+        ["Dispatch Base Node ID", "Candidate Dispatch Base"],
+    )
     if output_path.exists():
-        payload = np.load(output_path, allow_pickle=False)
-        matrix = payload["travel_time"]
-        if matrix.shape == (len(dispatch), len(demand)):
-            print(f"Using current OD cache: {output_path.relative_to(ROOT)}", flush=True)
-            return matrix, demand, dispatch
+        try:
+            with np.load(output_path, allow_pickle=False) as payload:
+                required = {
+                    "travel_time",
+                    "metadata_json",
+                    "demand_identifiers",
+                    "dispatch_identifiers",
+                }
+                if required.issubset(payload.files):
+                    matrix = payload["travel_time"].copy()
+                    metadata = json.loads(str(payload["metadata_json"].item()))
+                    demand_ids = payload["demand_identifiers"]
+                    dispatch_ids = payload["dispatch_identifiers"]
+                    current = (
+                        matrix.shape == (len(dispatch), len(demand))
+                        and metadata == expected_metadata
+                        and np.array_equal(demand_ids, expected_demand_ids)
+                        and np.array_equal(dispatch_ids, expected_dispatch_ids)
+                    )
+                    if current:
+                        print(
+                            f"Using current OD cache: {output_path.relative_to(ROOT)}",
+                            flush=True,
+                        )
+                        return matrix, demand, dispatch
+        except (OSError, ValueError, KeyError, json.JSONDecodeError):
+            pass
+        print(f"Rebuilding stale OD cache: {output_path.relative_to(ROOT)}", flush=True)
 
     edge_columns = [
         "Road Edge ID",
@@ -258,20 +375,56 @@ def build_station_od(scenario: str) -> tuple[np.ndarray, pd.DataFrame, pd.DataFr
             flush=True,
         )
 
-    np.savez_compressed(output_path, travel_time=matrix)
+    np.savez_compressed(
+        output_path,
+        travel_time=matrix,
+        metadata_json=np.asarray(
+            json.dumps(expected_metadata, sort_keys=True),
+            dtype=str,
+        ),
+        demand_identifiers=expected_demand_ids,
+        dispatch_identifiers=expected_dispatch_ids,
+    )
     print(f"Saved: {output_path.relative_to(ROOT)}", flush=True)
     return matrix, demand, dispatch
 
 
 def fire_service_access_layer() -> pd.DataFrame:
     """Return normal/disrupted response time, backup count, and access penalty."""
-    output_path = NETWORK_DIR / "fire_service_access_125m.parquet"
-    if output_path.exists():
-        print(f"Using current fire-access layer: {output_path.relative_to(ROOT)}", flush=True)
-        return pd.read_parquet(output_path)
-
     normal, demand, _ = build_station_od("normal")
     central, _, _ = build_station_od("central")
+    expected_metadata = access_cache_metadata()
+    if ACCESS_PATH.exists() and json_metadata_matches(
+        ACCESS_METADATA_PATH,
+        expected_metadata,
+    ):
+        cached = pd.read_parquet(ACCESS_PATH)
+        cached_ids = cached["Mesh Code"].astype("string").to_numpy(dtype=str)
+        expected_ids = demand["Mesh Code"].astype("string").to_numpy(dtype=str)
+        required_columns = {
+            "Mesh Code",
+            "Normal Response Time (min)",
+            "Disrupted Response Time (min)",
+            "Backup Fire Base Count",
+            "Accessibility Penalty",
+            "Network Snap Accepted",
+        }
+        if required_columns.issubset(cached.columns) and np.array_equal(
+            cached_ids,
+            expected_ids,
+        ):
+            print(
+                f"Using current fire-access layer: {ACCESS_PATH.relative_to(ROOT)}",
+                flush=True,
+            )
+            return cached
+        print(
+            f"Rebuilding fire-access layer with changed mesh order: {ACCESS_PATH.relative_to(ROOT)}",
+            flush=True,
+        )
+    elif ACCESS_PATH.exists():
+        print(f"Rebuilding stale fire-access layer: {ACCESS_PATH.relative_to(ROOT)}", flush=True)
+
     normal_time = normal.min(axis=0)
     disrupted_time = central.min(axis=0)
     qualifying = (central <= BACKUP_THRESHOLD_MIN).sum(axis=0)
@@ -290,8 +443,9 @@ def fire_service_access_layer() -> pd.DataFrame:
             "Network Snap Accepted": demand["Network Snap Accepted"].fillna(False),
         }
     )
-    result.to_parquet(output_path, index=False)
-    print(f"Saved: {output_path.relative_to(ROOT)}", flush=True)
+    result.to_parquet(ACCESS_PATH, index=False)
+    write_json_metadata(ACCESS_METADATA_PATH, expected_metadata)
+    print(f"Saved: {ACCESS_PATH.relative_to(ROOT)}", flush=True)
     return result
 
 
@@ -302,10 +456,9 @@ def add_single_route_dependence() -> pd.DataFrame:
     they are modelling devices rather than mapped road segments. Cells without
     a base route within the declared threshold remain missing (unserved).
     """
-    output_path = NETWORK_DIR / "fire_service_access_125m.parquet"
     result = fire_service_access_layer()
     if "Single Route Dependence" in result.columns:
-        print(f"Using current route-dependence layer: {output_path.relative_to(ROOT)}", flush=True)
+        print(f"Using current route-dependence layer: {ACCESS_PATH.relative_to(ROOT)}", flush=True)
         return result
 
     central, demand, dispatch = build_station_od("central")
@@ -391,6 +544,6 @@ def add_single_route_dependence() -> pd.DataFrame:
         how="left",
         validate="one_to_one",
     )
-    result.to_parquet(output_path, index=False)
-    print(f"Updated: {output_path.relative_to(ROOT)}", flush=True)
+    result.to_parquet(ACCESS_PATH, index=False)
+    print(f"Updated: {ACCESS_PATH.relative_to(ROOT)}", flush=True)
     return result

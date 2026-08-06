@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from scipy.special import ndtr
 
-from fire_base_value_common import OBJECTIVES, leave_one_out_values
-from fire_service_access_common import build_station_od
+from fire_base_criticality_common import OBJECTIVES, leave_one_out_values
+from fire_service_access_common import UNMET_SERVICE_CAP_MIN, build_station_od
 from fire_service_reliability_common import build_compact_fire_network
 
 
@@ -29,7 +29,7 @@ CONSEQUENCE_PATH = RESULTS / "derived/fire_consequence_125m.parquet"
 INTERVENTION_PERFORMANCE_PATH = RESULTS / "derived/intervention_performance.parquet"
 ACCESS_COMMON_PATH = Path(__file__).with_name("fire_service_access_common.py")
 RELIABILITY_COMMON_PATH = Path(__file__).with_name("fire_service_reliability_common.py")
-FIRE_BASE_COMMON_PATH = Path(__file__).with_name("fire_base_value_common.py")
+FIRE_BASE_COMMON_PATH = Path(__file__).with_name("fire_base_criticality_common.py")
 
 MODELS = (
     "Length-dependent independent",
@@ -44,7 +44,7 @@ CLUSTER_CORRELATION = 0.70
 HAZARD_WEIGHT = 2.5
 PROJECTED_CRS = 6670
 TIMELY_THRESHOLD_MIN = 10.0
-RESPONSE_CAP_MIN = 20.0
+RESPONSE_CAP_MIN = UNMET_SERVICE_CAP_MIN
 
 
 def cache_is_current() -> bool:
@@ -101,7 +101,7 @@ def rank_metrics(reference: np.ndarray, alternative: np.ndarray, top_n: int) -> 
 
 
 def construct_robustness() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Run paired pilot mechanisms and representative-state priority checks."""
+    """Run paired road mechanisms and fixed-plan intervention robustness checks."""
     network = build_compact_fire_network(include_event_removed=True)
     section_ids = network.road_section_ids.astype(str)
     lengths = network.road_section_lengths.astype(np.float64)
@@ -295,34 +295,11 @@ def construct_robustness() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd
             if value
         ],
     }
-    candidate_ids = sorted(
-        {
-            section_id
-            for value in road["Selected Action IDs"].dropna()
-            for section_id in str(value).split(" | ")
-            if section_id
-        }
-    )
     section_position = pd.Series(
         np.arange(len(section_ids), dtype=np.int32),
         index=section_ids,
     )
-    cost = sections["Road Restoration Cost Proxy"].astype(float)
     objective_weight = weights[0].astype(np.float64)
-
-    def singleton_priority(failed: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        baseline, _ = network.route(failed=failed)
-        baseline = np.minimum(baseline, RESPONSE_CAP_MIN)
-        benefit: list[float] = []
-        for section_id in candidate_ids:
-            restored = np.zeros(len(section_ids), dtype=bool)
-            restored[int(section_position.loc[section_id])] = True
-            response, _ = network.route(failed=failed, restored=restored)
-            response = np.minimum(response, RESPONSE_CAP_MIN)
-            benefit.append(float(objective_weight @ (baseline - response)))
-        benefit_array = np.asarray(benefit)
-        cost_array = cost.reindex(candidate_ids).to_numpy(float)
-        return benefit_array, np.divide(benefit_array, cost_array)
 
     def accessibility_penalty(response: np.ndarray, qualifying: np.ndarray) -> np.ndarray:
         return 0.5 * np.minimum(response / RESPONSE_CAP_MIN, 1) + 0.5 / np.maximum(
@@ -330,68 +307,87 @@ def construct_robustness() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd
             1,
         )
 
-    def bundle_benefit(failed: np.ndarray, selected: list[str]) -> float:
-        baseline_time, baseline_count, _ = network.route_metrics(
-            failed=failed,
-            backup_threshold_min=TIMELY_THRESHOLD_MIN,
-            response_cap_min=RESPONSE_CAP_MIN,
-        )
+    def bundle_benefit(
+        failed: np.ndarray,
+        selected: list[str],
+        baseline_time: np.ndarray,
+        baseline_count: np.ndarray,
+    ) -> tuple[float, float]:
         restored = np.zeros(len(section_ids), dtype=bool)
         restored[section_position.loc[selected].to_numpy(np.int32)] = True
-        response_time, qualifying, _ = network.route_metrics(
+        response_time, qualifying, routing_seconds = network.route_metrics(
             failed=failed,
             restored=restored,
             backup_threshold_min=TIMELY_THRESHOLD_MIN,
             response_cap_min=RESPONSE_CAP_MIN,
         )
-        return float(
+        benefit = float(
             objective_weight
             @ (
                 accessibility_penalty(baseline_time, baseline_count)
                 - accessibility_penalty(response_time, qualifying)
             )
         )
+        return benefit, routing_seconds
 
-    reference_count, reference_cost = singleton_priority(
-        np.zeros(len(section_ids), dtype=bool)
-    )
     no_failures = np.zeros(len(section_ids), dtype=bool)
-    reference_bundle_benefit = {
-        rule: bundle_benefit(no_failures, selected)
-        for rule, selected in bundle_by_rule.items()
-    }
+    reference_time, reference_count, _ = network.route_metrics(
+        failed=no_failures,
+        backup_threshold_min=TIMELY_THRESHOLD_MIN,
+        response_cap_min=RESPONSE_CAP_MIN,
+    )
+    reference_bundle_benefit: dict[str, float] = {}
+    for rule, selected in bundle_by_rule.items():
+        reference_bundle_benefit[rule], _ = bundle_benefit(
+            no_failures,
+            selected,
+            reference_time,
+            reference_count,
+        )
+        if reference_bundle_benefit[rule] <= 0:
+            raise ValueError(f"Reference intervention benefit is nonpositive for {rule}")
+
     intervention_rows: list[dict[str, object]] = []
     for model in MODELS:
-        alternative_count, alternative_cost = singleton_priority(
-            representative_state[model]
-        )
-        for rule, reference, alternative in (
-            ("Section count", reference_count, alternative_count),
-            ("Length-aware", reference_cost, alternative_cost),
-        ):
-            correlation, overlap = rank_metrics(reference, alternative, top_n=3)
-            representative_benefit = bundle_benefit(
-                representative_state[model],
-                bundle_by_rule[rule],
+        for replicate, failed in enumerate(states_at_main[model], start=1):
+            baseline_time, baseline_count, baseline_seconds = network.route_metrics(
+                failed=failed,
+                backup_threshold_min=TIMELY_THRESHOLD_MIN,
+                response_cap_min=RESPONSE_CAP_MIN,
             )
-            retained_share = np.divide(
-                representative_benefit,
-                reference_bundle_benefit[rule],
-            )
-            intervention_rows.append(
-                {
-                    "Road Failure Model": model,
-                    "Expected Failed Road Length Share": 0.03,
-                    "Road Priority Rule": rule,
-                    "Intervention Rank Correlation": correlation,
-                    "Top Three Road Priority Overlap": overlap,
-                    "Candidate Road Section Count": len(candidate_ids),
-                    "Selected Road Section IDs": " | ".join(bundle_by_rule[rule]),
-                    "Event-Specific Bundle Benefit": reference_bundle_benefit[rule],
-                    "Representative State Bundle Benefit": representative_benefit,
-                    "Retained Protection Gain Share": retained_share,
-                }
-            )
+            for rule, selected in bundle_by_rule.items():
+                state_benefit, restoration_seconds = bundle_benefit(
+                    failed,
+                    selected,
+                    baseline_time,
+                    baseline_count,
+                )
+                intervention_rows.append(
+                    {
+                        "Road Failure Model": model,
+                        "Expected Failed Road Length Share": 0.03,
+                        "Simulation Replicate": replicate,
+                        "Road Priority Rule": rule,
+                        "Evaluation Mode": "Fixed event-road bundle",
+                        "Selected Road Section IDs": " | ".join(selected),
+                        "Selected Road Section Count": len(selected),
+                        "Event-Specific Bundle Benefit": reference_bundle_benefit[rule],
+                        "Road-State Bundle Benefit": state_benefit,
+                        "Retained Protection Gain Share": (
+                            state_benefit / reference_bundle_benefit[rule]
+                        ),
+                        "Realized Failed Road Length Share": float(
+                            lengths[failed].sum() / total_length
+                        ),
+                        "Baseline Routing Seconds": baseline_seconds,
+                        "Restoration Routing Seconds": restoration_seconds,
+                    }
+                )
+            if replicate == 1 or replicate % 20 == 0 or replicate == PILOT_REPLICATES:
+                print(
+                    f"fixed-plan intervention states: {model} {replicate}/{PILOT_REPLICATES}",
+                    flush=True,
+                )
     intervention_stability = pd.DataFrame(intervention_rows)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

@@ -60,6 +60,23 @@ FACILITY_SPECS = (
         "#24856a",
         "s",
     ),
+    (
+        "School",
+        PROCESSED / "schools_preprocessed.parquet",
+        "School Facility ID",
+        "#c28c35",
+        "P",
+    ),
+    (
+        "Emergency evacuation site",
+        PROCESSED / "emergency_evacuation_sites_preprocessed.parquet",
+        "Evacuation Site ID",
+        "#a34f62",
+        "D",
+    ),
+)
+PLOTTED_FACILITY_CLASSES = frozenset(
+    {"Medical facility", "Welfare facility", "Designated shelter"}
 )
 
 PROJECTED_CRS = 6670
@@ -78,7 +95,7 @@ def percentile_rank(values: pd.Series) -> pd.Series:
 
 
 def load_facilities(crs) -> tuple[gpd.GeoDataFrame, dict[str, int]]:
-    """Load the three facility classes named in the Figure 3 plan."""
+    """Load all five classes used by the critical-facility exposure objective."""
     frames: list[gpd.GeoDataFrame] = []
     source_counts: dict[str, int] = {}
     for label, path, identifier, color, marker in FACILITY_SPECS:
@@ -366,6 +383,8 @@ def make_figure(mesh: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame) -> None:
             spine.set_visible(False)
 
     for label, _, _, color, marker in FACILITY_SPECS:
+        if label not in PLOTTED_FACILITY_CLASSES:
+            continue
         subset = facilities.loc[
             facilities["Facility Class"].eq(label)
             & facilities["Critical Facility Conditional Fire Consequence Rank"].ge(
@@ -394,6 +413,7 @@ def make_figure(mesh: gpd.GeoDataFrame, facilities: gpd.GeoDataFrame) -> None:
             label=label,
         )
         for label, _, _, color, marker in FACILITY_SPECS
+        if label in PLOTTED_FACILITY_CLASSES
     ]
     axes[1].legend(
         handles=legend_handles,
