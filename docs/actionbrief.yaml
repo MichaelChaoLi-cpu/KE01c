@@ -1779,6 +1779,7 @@ tableDictionary:
   table_municipality_fire_consequence_and_accessibility_summary:
     tableId: table_municipality_fire_consequence_and_accessibility_summary
     tablePath: data/results/tables/Table_municipality_fire_consequence_and_accessibility_summary.xlsx
+    tableSheet: Municipality Summary
     tableCaption: Municipality fire consequence and accessibility summary
     tableAim: 'Main: municipality-level differences in exposed population, older-population share, accessibility degradation,
       response redundancy, and aggregate conditional fire consequence.'
@@ -1788,6 +1789,7 @@ tableDictionary:
   table_priority_critical_facilities:
     tableId: table_priority_critical_facilities
     tablePath: data/results/tables/Table_priority_critical_facilities.xlsx
+    tableSheet: Priority Facilities
     tableCaption: Priority critical-facility screening summary
     tableAim: 'Main: a compact, balanced screening summary of hospitals, welfare facilities, schools, shelters, and evacuation
       sites in cells with high conditional consequence or weak post-earthquake fire-service accessibility; public-facing facility
@@ -1798,6 +1800,7 @@ tableDictionary:
   table_fire_base_leave_one_out_criticality:
     tableId: table_fire_base_leave_one_out_criticality
     tablePath: data/results/tables/Table_fire_base_leave_one_out_criticality.xlsx
+    tableSheet: Top 20 Fire Bases
     tableCaption: Fire-base leave-one-out criticality
     tableAim: 'Main: the 20 eligible candidate dispatch bases with the largest event-road population-objective leave-one-out
       loss, with normal-road comparison and across-road instability; complete results for all 81 bases remain in derived data.'
@@ -1807,6 +1810,7 @@ tableDictionary:
   table_intervention_performance_by_budget:
     tableId: table_intervention_performance_by_budget
     tablePath: data/results/tables/Table_intervention_performance_by_budget.xlsx
+    tableSheet: Budget Performance
     tableCaption: Intervention performance by budget
     tableAim: 'Main: paired performance of prioritized and population-baseline candidate staging-site selection, bounded water
       support, and road-section restoration at representative unit-count and length-aware cost-proxy budgets.'
@@ -1816,27 +1820,30 @@ tableDictionary:
   table_highest_priority_125_m_cells:
     tableId: table_highest_priority_125_m_cells
     tablePath: data/results/tables/Table_highest_priority_125_m_cells.xlsx
+    tableSheet: Priority Cells
     tableCaption: Highest-priority 125 m cells
     tableAim: 'Supplementary: the complete cell-level list supporting priority verification, patrol, access protection, or
       resource pre-positioning; the main text reports only its geographic concentration and principal capability gaps.'
     tableExplanation: Fifty cells document the locations, exposure, susceptibility, accessibility, and conditional-consequence
       measures underlying the priority screen.
-    tableSuitableSection: Supplementary materials
+    tableSuitableSection: Appendix A
   table_robustness_and_sensitivity_summary:
     tableId: table_robustness_and_sensitivity_summary
     tablePath: data/results/tables/Table_robustness_and_sensitivity_summary.xlsx
+    tableSheet: Robustness Summary
     tableCaption: Robustness and sensitivity summary
     tableAim: 'Supplementary: exact nonredundant values supporting road-response reliability, multi-state leave-one-out fire-base
       stability, fixed-plan road-restoration benefit distributions, built-form/consequence sensitivity, and the final reliability-convergence
       checkpoint.'
     tableExplanation: Twenty compact rows report reliability, convergence, ranking stability, component deletion, accessibility
       multipliers, and retained intervention gains.
-    tableSuitableSection: Supplementary materials
+    tableSuitableSection: Appendix B
 figureDictionary:
   fig_integrated_fire_consequence_and_response_system_dependence_framework:
     figureId: fig_integrated_fire_consequence_and_response_system_dependence_framework
     figurePath: data/results/figures/Figure_integrated_fire_consequence_and_response_system_dependence_framework.png
     figureCaption: Integrated fire consequence and response-system dependence framework
+    figurePanelCount: 1
     figureAim: 'Main: the complete analytical chain from built form, post-earthquake accessibility, water constraints, and
       exposure through conditional consequence, leave-one-fire-base-out system dependence, and intervention benefit.'
     figureExplanation: Four input domains feed a conditional-consequence screen, then support fire-base dependence and intervention
@@ -1846,58 +1853,83 @@ figureDictionary:
     figureId: fig_conditional_fire_consequence_and_vulnerable_exposure
     figurePath: data/results/figures/Figure_conditional_fire_consequence_and_vulnerable_exposure.png
     figureCaption: Conditional fire consequence and vulnerable exposure
+    figurePanelCount: 2
     figureAim: 'Main: where population and essential services overlap with conditional spread susceptibility and constrained
       response to create the greatest conditional consequences.'
     figureExplanation: Two aligned maps show where population and critical services coincide with high susceptibility and
       constrained response.
+    figureNote: Panel a maps population priority within the highest 10% of combined-stress conditional-consequence cells.
+      Panel b maps critical-service priority within the same screened cells and locates medical facilities, welfare facilities,
+      and designated shelters.
     figureSuitableSection: Results
   fig_post_earthquake_fire_service_accessibility:
     figureId: fig_post_earthquake_fire_service_accessibility
     figurePath: data/results/figures/Figure_post_earthquake_fire_service_accessibility.png
     figureCaption: Post-earthquake fire-service accessibility
+    figurePanelCount: 4
     figureAim: 'Main: how event-specific disruption and additional road-section uncertainty change response time, 10-minute
       backup coverage, and reliable timely arrival.'
     figureExplanation: Four maps compare normal travel time, event-added delay, loss of backup coverage, and reliable timely
       arrival.
+    figureNote: Panel a maps nominal response time under normal roads. Panel b maps additional response time under the event-specific
+      road-disruption scenario. Panel c maps the number of backup fire bases lost within 10 minutes. Panel d maps the modelled
+      chance of response within 10 minutes under added road-section uncertainty.
     figureSuitableSection: Results
   fig_fire_base_accessibility_dependence_under_road_disruption:
     figureId: fig_fire_base_accessibility_dependence_under_road_disruption
     figurePath: data/results/figures/Figure_fire_base_accessibility_dependence_under_road_disruption.png
     figureCaption: Fire-base dependence under road disruption
+    figurePanelCount: 2
     figureAim: 'Main: how much modelled system loss increases when each eligible fire base is removed from the full response
       system, and how that dependence changes between normal and event-specific roads.'
     figureExplanation: The map locates high-dependence bases, while ranked comparisons show how one-base removal changes system
       loss across road conditions.
+    figureNote: Panel a maps each eligible fire base by its event-road share of leave-one-out system loss. Panel b compares
+      normal-road and event-disrupted-road loss shares for the 20 most consequential bases under the event-specific scenario.
     figureSuitableSection: Results
   fig_intervention_priorities_and_protection_gains:
     figureId: fig_intervention_priorities_and_protection_gains
     figurePath: data/results/figures/Figure_intervention_priorities_and_protection_gains.png
     figureCaption: Intervention priorities and protection gains
+    figurePanelCount: 3
     figureAim: 'Main: where traceable candidate staging-site selection, bounded water support, and junction-to-junction road-section
       restoration reduce weighted conditional consequence under the event-specific scenario, and how road priorities change
       between section-count and length-aware cost-proxy budgets.'
     figureExplanation: Maps, bars, and budget curves identify staging, water-support, and road-restoration priorities and
       their modelled consequence reductions.
+    figureNote: Panel a maps selected staging sites, water-support areas, and restored road sections against the highest combined-stress
+      conditional-consequence cells. Panel b compares prioritized and simple-baseline consequence reductions at budget level
+      3 for each action class. Panel c traces modelled consequence reduction across class-specific budget levels 1 through
+      5, including section-count and length-aware road budgets.
     figureSuitableSection: Results
   fig_conditional_fire_susceptibility_across_kumamoto:
     figureId: fig_conditional_fire_susceptibility_across_kumamoto
     figurePath: data/results/figures/Figure_conditional_fire_susceptibility_across_kumamoto.png
     figureCaption: Conditional fire susceptibility across Kumamoto
+    figurePanelCount: 3
     figureAim: 'Supplementary: how building coverage, built continuity, and mapped firebreak conditions combine into the conditional
       spread-susceptibility screen.'
     figureExplanation: Three maps show building coverage, built continuity and firebreak conditions, and their combined ignition-conditioned
       susceptibility screen.
-    figureSuitableSection: Supplementary materials
+    figureNote: Panel a maps observed building-footprint coverage in populated 125 m cells. Panel b maps the relative score
+      for conditions supporting continuous spread, combining built continuity with separation and firebreak information.
+      Panel c maps the resulting conditional spread-susceptibility score.
+    figureSuitableSection: Appendix A
   fig_scenario_and_parameter_robustness:
     figureId: fig_scenario_and_parameter_robustness
     figurePath: data/results/figures/Figure_scenario_and_parameter_robustness.png
     figureCaption: Scenario and parameter robustness
+    figurePanelCount: 3
     figureAim: 'Supplementary: whether alternative road-section failure mechanisms change response reliability, high-criticality
       fire-base membership under the leave-one-out estimand, or the retained benefit of fixed event-specific road-restoration
       plans across 100 states per mechanism.'
     figureExplanation: Panels compare road-response reliability, fire-base priority retention, and fixed-plan road-restoration
       gains across declared stress mechanisms.
-    figureSuitableSection: Supplementary materials
+    figureNote: Panel a compares population within 10-minute response across road-failure mechanisms and nominal failed-road
+      inputs. Panel b summarizes how many of the event-road top 10 fire bases are retained under the nominal 3% input. Panel
+      c reports retained protection gains for fixed section-count and length-aware road-restoration plans across 100 states
+      for each failure mechanism.
+    figureSuitableSection: Appendix B
 analysisStructureBrief:
   overview: Eight linked analytical levels move from declared earthquake-response scenarios through grid screening and network
     reliability to fire-base dependence, interventions, and stress testing. All results are conditional planning screens rather
